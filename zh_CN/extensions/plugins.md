@@ -38,9 +38,11 @@ README.md                rebar.config             src
 
 第一次编译过程较长，因为它依赖于 EMQX 主项目（方便插件直接使用主项目的各种函数），需要下载依赖，并编译主项目。
 
-{% emqxce %}
+:::tip
+
 编译环境请参照 [源码编译安装 EMQX](../deploy/install-source.md) 配置。
-{% endemqxce %}
+
+:::
 
 ### 3. 挂载钩子函数
 
@@ -73,6 +75,7 @@ load(Env) ->
 
 ### 4. 编写自定义访问控制代码
 
+#### **认证钩子**函数代码：
 ```erlang
 %%  只允许 clientid 为 [A-Za-z0-9_] 的客户端连接。
 on_client_authenticate(_ClientInfo = #{clientid := ClientId}, Result, _Env) ->
@@ -80,13 +83,40 @@ on_client_authenticate(_ClientInfo = #{clientid := ClientId}, Result, _Env) ->
     match -> {ok, Result};
     nomatch -> {stop, {error, banned}}
   end.
+```
+
+#### **授权钩子**函数代码：
+
+:::tip Broken Changes
+
+在 EMQX v5.1.2 (含) 之后的版本中，'client.authorize' 钩子函数参数中，Action 由 aotm: `subscribe|publish` 变更为含义更丰富的 map 类型
+
+形如：`#{action_type := subscribe, qos := 0}`，更多信息请参考 [v5.1.2:emqx_channel.erl#L1803-L1815](https://github.com/emqx/emqx/blob/v5.1.2/apps/emqx/src/emqx_channel.erl#L1803-L1815)
+
+:::
+
+EMQX v5.1.1 及之前版本：
+```erlang
 %% 只允许订阅 /room/{clientid} 的主题，但是可以发送消息给任意主题。
-on_client_authorize(_ClientInfo = #{clientid := ClientId}, subscribe, Topic, Result, _Env) ->
-  case emqx_topic:match(Topic, <<"/room/", ClientId/binary>>) of
-    true -> {ok, Result};
-    false -> stop
-  end;
-on_client_authorize(_ClientInfo, _Pub, _Topic, Result, _Env) -> {ok, Result}.
+on_client_authorize(_ClientInfo = #{clientid := ClientId}, _Action = subscribe, Topic, Result, _Env) ->
+    case emqx_topic:match(Topic, <<"/room/", ClientId/binary>>) of
+        true -> {ok, Result#{result => allow}};
+        false -> {stop, Result#{result => deny}}
+    end;
+on_client_authorize(_ClientInfo, _Action = publish, _Topic, Result, _Env) ->
+    {ok, Result#{result => allow}}.
+```
+
+EMQX v5.1.2 及之后版本：
+```erlang
+%% 只允许订阅 /room/{clientid} 的主题，但是可以发送消息给任意主题。
+on_client_authorize(_ClientInfo = #{clientid := ClientId}, _Action = #{action_type := subscribe, qos := _}, Topic, Result, _Env) ->
+    case emqx_topic:match(Topic, <<"/room/", ClientId/binary>>) of
+        true -> {ok, Result#{result => allow}};
+        false -> {stop, Result#{result => deny}}
+    end;
+on_client_authorize(_ClientInfo, _Action = #{action_type := publish, qos := _}, _Topic, Result, _Env) ->
+    {ok, Result#{result => allow}}.
 ```
 
 通过以上 2 个钩子函数，我们只让 clientid 格式符合规范的客户端登录。并且只能订阅 `/room/{clientid}` 主题，这样就实现了一个简单的聊天室功能：客户端可以发消息给任意客户端，但每个客户端只能订阅与自己相关的主题。
@@ -152,5 +182,7 @@ make rel
 ```
 
 {% emqxee %}
+
 热升级后需要重新安装插件。
+
 {% endemqxee %}
