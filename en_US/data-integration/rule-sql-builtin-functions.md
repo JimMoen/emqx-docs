@@ -339,6 +339,18 @@ is_str('123') = true
 is_str(123) = false
 ```
 
+### is_empty(Array or Map) -> boolean
+
+Determine whether an `Array` or a `Map` is empty. Example:
+
+```bash
+is_empty(json_decode('{}')) = true
+is_empty('{}') = true
+is_empty('{"key" : 1}') = false
+is_empty(map_get('key', '{"key" : []}')) = true
+is_empty(map_get('key', '{"key" : [1}')) = false
+```
+
 ## Data Type Conversion Functions
 
 ### bool(Term: boolean | integer | string) -> boolean
@@ -939,6 +951,15 @@ Insert the `Key` and associated `Value` into the `Map` and return the updated ma
 ```bash
 mget(['a', 'b'], mput(['a', 'b'], 2, json_decode('{"a": {"b": 1}}'))) = 2
 mget(['a', 'b'], mput(['a', 'b'], 2, json_decode('{"c": 1}'))) = 2
+```
+
+### map_size(Map: map) -> any
+
+Returns the size of the keys in a `Map`. Example:
+
+```bash
+map_size(json_decode('{}')) = 0
+map_size(json_decode('{"msg": "hello"}')) = 1
 ```
 
 ## Array Operation Functions
