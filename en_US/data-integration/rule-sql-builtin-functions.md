@@ -489,6 +489,30 @@ str_utf8(3.14159265359) = '3.1415926536'
 str_utf8(0.000000314159265359) = '0.0000003142'
 ```
 
+### str_utf16_le(Term: any) -> binary
+
+Converts any type of `Term` to a UTF-16 little-endian encoded string.
+
+::: tip
+
+UTF-16-little-endian encoded strings generally cannot be printed properly in JSON objects. They are generally treated as binary data in EMQX.
+Please call the bin2hexstr function to convert it into a corresponding string consisting of hexadecimal digits.
+It is generally used in systems that use little-endian UTF-16 encoding, such as Microsoft SQL Server.
+
+:::
+
+```bash
+# Unicode `h`:
+# |                          h(\u68)                              |
+# | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 1 | 0 | 1 | 0 | 0 | 0 | (big endian)
+# |              0x00             |              0x68             |
+# | 0 | 1 | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | (little endian)
+# |              0x68             |              0x00             |
+str_utf16_le('h') = 'h\u0000'
+
+bin2hexstr(str_utf16_le('hello')) = '680065006C006C006F00'
+```
+
 ## String Operation Functions
 
 String functions can be used for case transformations, space removal, substring extraction, replacement, escaping/unescaping, and other operations.
