@@ -459,7 +459,9 @@ str(json_decode({"msg": "hello"})) = '{"msg":"hello"}'
 str(json_decode('[{"msg": "hello"}]')) = '[{"msg":"hello"}]'
 
 # Trailing zeros are truncated
-str(0.300000004) = '0.3'
+# Contains 10 number of digits past the decimal point
+str(0.30000000040) = '0.3000000004'
+str(0.30000000004) = '0.3'
 
 # Contains at most 10 number of digits past the decimal point
 str(3.14159265359) = '3.1415926536'
