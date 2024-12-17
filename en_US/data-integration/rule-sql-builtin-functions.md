@@ -1364,6 +1364,22 @@ Converts a string of hexadecimal digits to the corresponding binary data. Exampl
 unzip(hexstr2bin('CB48CDC9C90700')) = 'hello'
 ```
 
+### sqlserver_bin2hexstr(Data: binary | string) -> string
+
+Converts arbitrary binary data to a binary type in Microsoft SQL Server, that is, a HEX-encoded string with a `0x` prefix.
+
+::: tip
+
+Can be used with the `CONVERT` function in Microsoft SQL Server to write UTF-16-little-endian encoded Unicode strings to versions of Microsoft SQL Server that do not support UTF-8 encoding.
+
+:::
+
+```
+sqlserver_bin2hexstr('hello') = '0x68656C6C6F'
+sqlserver_bin2hexstr(str_utf16_le('hello')) = '0x680065006C006C006F00'
+sqlserver_bin2hexstr(str_utf16_le('你好')) = '0x604F7D59'
+```
+
 ### Schema Registry Functions
 
 ::: tip

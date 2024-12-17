@@ -1363,6 +1363,22 @@ bin2hexstr(zip('hello')) = 'CB48CDC9C90700'
 unzip(hexstr2bin('CB48CDC9C90700')) = 'hello'
 ```
 
+### sqlserver_bin2hexstr(Data: binary | string) -> string
+
+将任意二进制数据转换为 Microsoft SQL Server 中的二进制类型，即带有 `0x` 前缀的 HEX 编码字符串。
+
+::: tip
+
+可与 Microsoft SQL Server 中的 `CONVERT` 函数配合以便向不支持 UTF-8 编码的 Microsoft SQL Server 版本写入 UTF-16-little-endian 编码的 Unicode 字符串。
+
+:::
+
+```
+sqlserver_bin2hexstr('hello') = '0x68656C6C6F'
+sqlserver_bin2hexstr(str_utf16_le('hello')) = '0x680065006C006C006F00'
+sqlserver_bin2hexstr(str_utf16_le('你好')) = '0x604F7D59'
+```
+
 ### Schema Registry
 
 在 EMQX 企业版中， schema registry 提供了`schema_decode` 和 `schema_encode` 功能，可以为 [Protobuf (Protocol Buffers)](https://developers.google.com/protocol-buffers) 和 [Avro](https://avro.apache.org/) 格式的数据进行编解码。 关于功能详情，请见[编解码](./schema-registry.md)。
