@@ -468,6 +468,28 @@ str(3.14159265359) = '3.1415926536'
 str(0.000000314159265359) = '0.0000003142'
 ```
 
+### str_utf8(Term: any) -> string
+
+将任意类型的 `Term` 转换为 UTF-8 编码的 string 类型。
+
+其余行为等同于函数 `str(Any)`。
+
+```bash
+str_utf8(100) = '100'
+str_utf8(nth(1, json_decode('[false]'))) = 'false'
+str_utf8(json_decode({"msg": "hello"})) = '{"msg":"hello"}'
+str_utf8(json_decode('[{"msg": "hello"}]')) = '[{"msg":"hello"}]'
+
+# Trailing zeros are truncated
+# Contains 10 number of digits past the decimal point
+str_utf8(0.30000000040) = '0.3000000004'
+str_utf8(0.30000000004) = '0.3'
+
+# Contains at most 10 number of digits past the decimal point
+str_utf8(3.14159265359) = '3.1415926536'
+str_utf8(0.000000314159265359) = '0.0000003142'
+```
+
 ## 字符串操作函数
 
 字符串函数可用于对字符串的大小写转换、空格删除、子串截取、转义/反转义、替换等处理。

@@ -467,6 +467,28 @@ str(3.14159265359) = '3.1415926536'
 str(0.000000314159265359) = '0.0000003142'
 ```
 
+### str_utf8(Term: any) -> string
+
+vert any type of `Term` into a string encoded in UTF-8.
+
+The rest of the behavior is equivalent to `str(Any)`.
+
+```bash
+str_utf8(100) = '100'
+str_utf8(nth(1, json_decode('[false]'))) = 'false'
+str_utf8(json_decode({"msg": "hello"})) = '{"msg":"hello"}'
+str_utf8(json_decode('[{"msg": "hello"}]')) = '[{"msg":"hello"}]'
+
+# Trailing zeros are truncated
+# Contains 10 number of digits past the decimal point
+str_utf8(0.30000000040) = '0.3000000004'
+str_utf8(0.30000000004) = '0.3'
+
+# Contains at most 10 number of digits past the decimal point
+str_utf8(3.14159265359) = '3.1415926536'
+str_utf8(0.000000314159265359) = '0.0000003142'
+```
+
 ## String Operation Functions
 
 String functions can be used for case transformations, space removal, substring extraction, replacement, escaping/unescaping, and other operations.
