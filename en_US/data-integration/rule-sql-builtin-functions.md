@@ -458,20 +458,21 @@ str(json_decode({"msg": "hello"})) = '{"msg":"hello"}'
 str(json_decode('[{"msg": "hello"}]')) = '[{"msg":"hello"}]'
 
 # Trailing zeros are truncated
-# Contains 10 number of digits past the decimal point
+# Up to 10 digits are preserved past the decimal point
 str(0.30000000040) = '0.3000000004'
 str(0.30000000004) = '0.3'
 
-# Contains at most 10 number of digits past the decimal point
+# Rounded to 10 digits after the decimal
+# Rounded after the 10th digit
 str(3.14159265359) = '3.1415926536'
 str(0.000000314159265359) = '0.0000003142'
 ```
 
 ### str_utf8(Term: any) -> string
 
-vert any type of `Term` into a string encoded in UTF-8.
+Convert any `Term` into a string encoded in UTF-8.
 
-The rest of the behavior is equivalent to `str(Any)`.
+The behavior is identical to `str(Any)` in all other respects.
 
 ```bash
 str_utf8(100) = '100'
@@ -480,24 +481,24 @@ str_utf8(json_decode({"msg": "hello"})) = '{"msg":"hello"}'
 str_utf8(json_decode('[{"msg": "hello"}]')) = '[{"msg":"hello"}]'
 
 # Trailing zeros are truncated
-# Contains 10 number of digits past the decimal point
+# Up to 10 digits are preserved past the decimal point
 str_utf8(0.30000000040) = '0.3000000004'
 str_utf8(0.30000000004) = '0.3'
 
-# Contains at most 10 number of digits past the decimal point
+# Rounded to 10 digits after the decimal
+# Rounded after the 10th digit
 str_utf8(3.14159265359) = '3.1415926536'
 str_utf8(0.000000314159265359) = '0.0000003142'
 ```
 
 ### str_utf16_le(Term: any) -> binary
 
-Converts any type of `Term` to a UTF-16 little-endian encoded string.
+Converts any `Term` to a UTF-16 little-endian encoded binary string.
 
 ::: tip
 
-UTF-16-little-endian encoded strings generally cannot be printed properly in JSON objects. They are generally treated as binary data in EMQX.
-Please call the bin2hexstr function to convert it into a corresponding string consisting of hexadecimal digits.
-It is generally used in systems that use little-endian UTF-16 encoding, such as Microsoft SQL Server.
+UTF-16 little-endian encoded strings may not display properly in JSON objects. They are typically treated as binary data in EMQX. To convert them into a readable string of hexadecimal digits, use the `bin2hexstr` function.
+This encoding is generally used in systems like Microsoft SQL Server that rely on little-endian UTF-16 encoding.
 
 :::
 
@@ -1370,7 +1371,7 @@ Converts arbitrary binary data to a binary type in Microsoft SQL Server, that is
 
 ::: tip
 
-Can be used with the `CONVERT` function in Microsoft SQL Server to write UTF-16-little-endian encoded Unicode strings to versions of Microsoft SQL Server that do not support UTF-8 encoding.
+This function can be used with the `CONVERT` function in Microsoft SQL Server to write UTF-16 little-endian encoded Unicode strings to SQL Server versions that do not support UTF-8 encoding.
 
 :::
 

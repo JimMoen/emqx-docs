@@ -458,12 +458,12 @@ str(nth(1, json_decode('[false]'))) = 'false'
 str(json_decode({"msg": "hello"})) = '{"msg":"hello"}'
 str(json_decode('[{"msg": "hello"}]')) = '[{"msg":"hello"}]'
 
-# Trailing zeros are truncated
-# Contains 10 number of digits past the decimal point
+# 末尾的零将被截断
+# 保留最多10位小数
 str(0.30000000040) = '0.3000000004'
 str(0.30000000004) = '0.3'
 
-# Contains at most 10 number of digits past the decimal point
+# 保留最多10位小数
 str(3.14159265359) = '3.1415926536'
 str(0.000000314159265359) = '0.0000003142'
 ```
@@ -480,24 +480,24 @@ str_utf8(nth(1, json_decode('[false]'))) = 'false'
 str_utf8(json_decode({"msg": "hello"})) = '{"msg":"hello"}'
 str_utf8(json_decode('[{"msg": "hello"}]')) = '[{"msg":"hello"}]'
 
-# Trailing zeros are truncated
-# Contains 10 number of digits past the decimal point
+# 末尾的零将被截断
+# 保留最多10位小数
 str_utf8(0.30000000040) = '0.3000000004'
 str_utf8(0.30000000004) = '0.3'
 
-# Contains at most 10 number of digits past the decimal point
+# 保留最多10位小数
 str_utf8(3.14159265359) = '3.1415926536'
 str_utf8(0.000000314159265359) = '0.0000003142'
 ```
 
-### str_utf16_le(Term: any) -> string
+### str_utf16_le(Term: any) -> binary
 
-将任意类型的 `Term` 转换为 UTF-16 小端序编码的 string
+将任意类型的 `Term` 转换为 UTF-16 小端序编码的 string。
 
 ::: tip
 
 UTF-16-little-endian 编码的字符串一般无法正常在 JSON 对象中打印。在 EMQX 中一般被作为二进制数据处理。
-请调用 bin2hexstr 函数将其转换成对应的由十六进制数字组成的字符串。
+请调用 `bin2hexstr` 函数将其转换成对应的由十六进制数字组成的字符串。
 一般用于 Microsoft SQL Server 等使用小端序 UTF-16 编码的系统。
 
 :::
