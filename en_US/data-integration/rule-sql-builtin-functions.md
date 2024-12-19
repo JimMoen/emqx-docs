@@ -2,12 +2,12 @@
 
 The rule engine proffers a variety of built-in functions. You can utilize these functions within SQL to accomplish basic data processing, including:
 
-- [Mathematical](#mathematical-functions),
+- [Mathematical](#mathematical-functions)
 - [Data Type Judgment](#data-type-judgment-functions)
-- [Data Type Conversion](#data-type-conversion-functions),
-- [String Operations](#string-operation-functions),
-- [Map Operations](#map-operation-functions),
-- [Array Operations](#array-operation-functions),
+- [Data Type Conversion](#data-type-conversion-functions)
+- [String Operations](#string-operation-functions)
+- [Map Operations](#map-operation-functions)
+- [Array Operations](#array-operation-functions)
 - [Hashing](#hashing-functions)
 - [Compression and Decompression](#compression-and-decompression-functions)
 - [Bit Operations](#bit-operation-functions)

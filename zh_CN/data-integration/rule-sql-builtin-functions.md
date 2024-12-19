@@ -340,6 +340,18 @@ is_str('123') = true
 is_str(123) = false
 ```
 
+### is_empty(Array or Map) -> boolean
+
+判断一个 `Array` 或一个 `Map` 是否为空。示例：
+
+```bash
+is_empty(json_decode('{}')) = true
+is_empty('{}') = true
+is_empty('{"key" : 1}') = false
+is_empty(map_get('key', '{"key" : []}')) = true
+is_empty(map_get('key', '{"key" : [1}')) = false
+```
+
 ## 数据类型转换函数
 
 ### bool(Term: boolean | integer | string) -> boolean
@@ -940,6 +952,15 @@ mget(['a', 'b'], json_decode('{"a": {"b": 1}}')) = 1
 ```bash
 mget(['a', 'b'], mput(['a', 'b'], 2, json_decode('{"a": {"b": 1}}'))) = 2
 mget(['a', 'b'], mput(['a', 'b'], 2, json_decode('{"c": 1}'))) = 2
+```
+
+### map_size(Map: map) -> any
+
+返回 `Map` 中 Key 的数量。示例：
+
+```bash
+map_size(json_decode('{}')) = 0
+map_size(json_decode('{"msg": "hello"}')) = 1
 ```
 
 ## 数组操作函数
