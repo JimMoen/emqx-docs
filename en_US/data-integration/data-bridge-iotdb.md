@@ -162,66 +162,33 @@ This section demonstrates how to create a rule in EMQX to process messages from 
 
       - **Align Timeseries**: Disabled by default. Once enabled, the timestamp columns of a group of aligned timeseries are stored only once in IoTDB, rather than duplicating them for each individual timeseries within the group. For more information, see [Aligned timeseries](https://iotdb.apache.org/UserGuide/V1.1.x/Data-Concept/Data-Model-and-Terminology.html#aligned-timeseries).
 
-10. Configure the **Write Data** to specify the ways to generate IoTDB data from MQTT messages. Due to historical reasons, you can select either of the following methods:
+10. Configure the **Write Data** to specify the ways to generate IoTDB data from MQTT messages.
 
-      - **Payload-Described**
+    You can define a template in the **Write Data** section, including as many items as needed, each with the required contextual information per row. When this template is provided, the system will generate IoTDB data by applying it to the MQTT message. The template for writing data supports batch setting via CSV file. For details, refer to [Batch Setting](#batch-setting).
 
-        In this approach, you should leave the **Write Data** field empty and include the required contextual information in the MQTT message in the `SELECT` part of the rule. For example, the client is sending a message with the payload in JSON format as follows:
+  For example, consider this template:
 
-        ```json
-        {
-          "measurement": "temp",
-          "data_type": "FLOAT",
-          "value": "32.67",
-          "device_id": "root.sg27" // optional
-        }
-        ```
+  | Timestamp | Measurement | Data Type | Value    |
+  | --------- | ----------- | --------- | -------- |
+  |           | index       | INT32     | ${index} |
+  |           | temperature | FLOAT     | ${temp}  |
 
-        You can use the following rule to present the fields `measurement`, `data_type` and `value`.
+  :::tip
 
-        ```sql
-        SELECT
-          payload.measurement, payload.data_type, payload.value, clientid as payload.device_id
-        FROM
-          "root/#"
-        ```
+  `Timestamp` and `Value` support placeholder syntax to fill it with variables.
 
-        If the payload is structured differently, you can use the rule to rewrite its structure like the following:
+  If the `Timestamp` is omitted, it will be automatically filled with the current system time in milliseconds.
 
-        ```sql
-        SELECT
-          payload.measurement, payload.dtype as payload.data_type, payload.val as payload.value
-        FROM
-          "root/#"
-        ```
+  :::
 
-        - **Template-Described**
+  Then, your MQTT message can be structured as follows:
 
-          With this approach, you can define a template in the **Write Data** section, including as many items as needed, each with the required contextual information per row. When this template is provided, the system will generate IoTDB data by applying it to the MQTT message. The template for writing data supports batch setting via CSV file. For details, refer to [Batch Setting](#batch-setting).
-
-          For example, consider this template:
-
-          | Timestamp | Measurement | Data Type | Value    |
-          | --------- | ----------- | --------- | -------- |
-          |           | index       | INT32     | ${index} |
-          |           | temperature | FLOAT     | ${temp}  |
-
-          :::tip
-
-          Each column supports placeholder syntax to fill it with variables.
-
-          If the Timestamp is omitted, it will be automatically filled with the current system time in milliseconds.
-
-          :::
-
-          Then, your MQTT message can be structured as follows:
-
-          ```json
-          {
-          "index": "42",
-          "temp": "32.67"
-          }
-          ```
+  ```json
+  {
+  "index": "42",
+  "temp": "32.67"
+  }
+  ```
 
 11. Advanced settings (optional):  See [Advanced Configurations](#advanced-configurations).
 
@@ -247,7 +214,7 @@ When configuring **Write Data**, you can use the batch setting feature to import
 
    | Timestamp | Measurement | Data Type | Value             | Remarks (Optional)                                           |
    | --------- | ----------- | --------- | ----------------- | ------------------------------------------------------------ |
-   | now       | temp        | FLOAT     | ${payload.temp}   | Fields, values, and data types are mandatory. Available data type options include BOOLEAN, INT32, INT64, FLOAT, DOUBLE, TEXT |
+   | now       | temp        | FLOAT     | ${payload.temp}   | Fields, values, and data types are mandatory. Available data type options include: boolean, int32, int64, float, double, text |
    | now       | hum         | FLOAT     | ${payload.hum}    |                                                              |
    | now       | status      | BOOLEAN   | ${payload.status} |                                                              |
    | now       | clientid    | TEXT      | ${clientid}       |                                                              |
@@ -257,8 +224,8 @@ When configuring **Write Data**, you can use the batch setting feature to import
      - now_ms: Current millisecond timestamp
      - now_us: Current microsecond timestamp
      - now_ns: Current nanosecond timestamp
-   - **Measurement**: Field name, supports constants or placeholders in ${var} format.
-   - **Data Type**: Data type, with options including BOOLEAN, INT32, INT64, FLOAT, DOUBLE, TEXT.
+   - **Measurement**: Field name
+   - **Data Type**: Data type, with options including boolean, int32, int64, float, double, TEXT.
    - **Value**: The data value to be written, supports constants or placeholders in ${var} format, and must match the data type.
    - **Remarks**: Used only for notes within the CSV file, cannot be imported into EMQX.
 
@@ -314,11 +281,17 @@ You can use the built-in WebSocket client in the EMQX dashboard to test your Apa
 
      ```json
     {
-       "measurement": "temp",
-    "data_type": "FLOAT",
-       "value": "37.6"
+       "value": "37.6",
+       "device_id": "root.sg27"
     }
      ```
+
+    ::: tip
+
+    The `Write Data` template is:
+        ```now, "temp", float, "${payload.value}"```
+
+    :::
 
    - **QoS**: `2`
 
