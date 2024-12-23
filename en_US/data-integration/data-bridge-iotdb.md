@@ -165,32 +165,33 @@ This section demonstrates how to create a rule in EMQX to process messages from 
 10. Configure the **Write Data** to specify the ways to generate IoTDB data from MQTT messages.
 
     You can define a template in the **Write Data** section, including as many items as needed, each with the required contextual information per row. When this template is provided, the system will generate IoTDB data by applying it to the MQTT message. The template for writing data supports batch setting via CSV file. For details, refer to [Batch Setting](#batch-setting).
+    
+     For example, consider this template:
+    
+    | Timestamp | Measurement | Data Type | Value    |
+    | --------- | ----------- | --------- | -------- |
+    |           | index       | INT32     | ${index} |
+    |           | temperature | FLOAT     | ${temp}  |
+    
+      :::tip
+    
+      `Timestamp` and `Value` support placeholder syntax to fill it with variables.
+    
+      If the `Timestamp` is omitted, it will be automatically filled with the current system time in milliseconds.
+    
+      :::
+    
+      Then, your MQTT message can be structured as follows:
+    
+      ```json
+    {
+    "index": "42",
+    "temp": "32.67"
+    }
+      ```
+    
 
-  For example, consider this template:
-
-  | Timestamp | Measurement | Data Type | Value    |
-  | --------- | ----------- | --------- | -------- |
-  |           | index       | INT32     | ${index} |
-  |           | temperature | FLOAT     | ${temp}  |
-
-  :::tip
-
-  `Timestamp` and `Value` support placeholder syntax to fill it with variables.
-
-  If the `Timestamp` is omitted, it will be automatically filled with the current system time in milliseconds.
-
-  :::
-
-  Then, your MQTT message can be structured as follows:
-
-  ```json
-  {
-  "index": "42",
-  "temp": "32.67"
-  }
-  ```
-
-11. Advanced settings (optional):  See [Advanced Configurations](#advanced-configurations).
+11. Advanced settings (optional): See [Advanced Configurations](#advanced-configurations).
 
 12. Before clicking **Create**, you can click **Test Connectivity** to test if the Sink can be connected to the Apache IoTDB server.
 
@@ -214,18 +215,18 @@ When configuring **Write Data**, you can use the batch setting feature to import
 
    | Timestamp | Measurement | Data Type | Value             | Remarks (Optional)                                           |
    | --------- | ----------- | --------- | ----------------- | ------------------------------------------------------------ |
-   | now       | temp        | FLOAT     | ${payload.temp}   | Fields, values, and data types are mandatory. Available data type options include: boolean, int32, int64, float, double, text |
-   | now       | hum         | FLOAT     | ${payload.hum}    |                                                              |
-   | now       | status      | BOOLEAN   | ${payload.status} |                                                              |
-   | now       | clientid    | TEXT      | ${clientid}       |                                                              |
+   | now       | temp        | float     | ${payload.temp}   | Fields, values, and data types are mandatory. Available data type options include: boolean, int32, int64, float, double, text |
+   | now       | hum         | float     | ${payload.hum}    |                                                              |
+   | now       | status      | boolean   | ${payload.status} |                                                              |
+   | now       | clientid    | test      | ${clientid}       |                                                              |
 
    - **Timestamp**: Supports placeholders in ${var} format, requiring timestamp format. You can also use the following special characters to insert system time:
      - now: Current millisecond timestamp
      - now_ms: Current millisecond timestamp
      - now_us: Current microsecond timestamp
      - now_ns: Current nanosecond timestamp
-   - **Measurement**: Field name
-   - **Data Type**: Data type, with options including boolean, int32, int64, float, double, TEXT.
+   - **Measurement**: Field name.
+   - **Data Type**: Data type, with options including boolean, int32, int64, float, double, and text.
    - **Value**: The data value to be written, supports constants or placeholders in ${var} format, and must match the data type.
    - **Remarks**: Used only for notes within the CSV file, cannot be imported into EMQX.
 
@@ -248,26 +249,7 @@ You can use the built-in WebSocket client in the EMQX dashboard to test your Apa
 
 3. Click **Connect** to connect the client to the EMQX instance.
 
-3. Scroll down to the publish area. Specify the device id in the message and type the following:
-
-   - **Topic**: `root/test`
-
-   - **Payload**:
-
-     ```json
-     {
-       "measurement": "temp",
-       "data_type": "FLOAT",
-       "value": "37.6",
-       "device_id": "root.sg27"
-     }
-     ```
-
-   - **QoS**: `2`
-
-5. Click **Publish** to send the message.
-
-6. Publish another message with the device id specified in the topic:
+4. Scroll down to the publish area. Specify the device id in the message and type the following:
 
    - **Topic**: `root/sg27`
 
@@ -280,19 +262,19 @@ You can use the built-in WebSocket client in the EMQX dashboard to test your Apa
    - **Payload**:
 
      ```json
-    {
+      {
        "value": "37.6",
        "device_id": "root.sg27"
-    }
+      }
      ```
-
-    ::: tip
-
-    The `Write Data` template is:
-        ```now, "temp", float, "${payload.value}"```
-
-    :::
-
+     
+      ::: tip
+     
+      The `Write Data` template is:
+          ```now, "temp", float, "${payload.value}"```
+     
+      :::
+     
    - **QoS**: `2`
 
 7. Click **Publish** to send the message.
@@ -318,7 +300,6 @@ You can use the built-in WebSocket client in the EMQX dashboard to test your Apa
    |                    Time|root.sg27.temp|
    +------------------------+--------------+
    |2023-05-05T14:26:44.743Z|          37.6|
-   |2023-05-05T14:27:44.743Z|          36.6|
    +------------------------+--------------+
    ```
 
