@@ -424,6 +424,9 @@
     - title_en: SysKeeper
       title_cn: SysKeeper
       path: data-integration/syskeeper
+    - title_en: Tablestore
+      title_cn: Tablestore
+      path: data-integration/tablestore
     - title_en: TDengine
       title_cn: TDengine
       path: data-integration/data-bridge-tdengine
