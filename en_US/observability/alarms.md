@@ -6,7 +6,7 @@ Alarm is an EMQX Enterprise feature.
 
 :::
 
-EMQX offers a built-in monitoring and alarm functionality for monitoring the internal state changes, such as CPU occupancy, system, and process memory occupancy, number of processes, rule engine resource status, and cluster partition and healing. EMQX triggers and records these changes when they exceed a threshold or deviate from expectations, and removes them from the list once they are restored. 
+EMQX offers a built-in monitoring and alarm functionality for monitoring the internal state changes, such as CPU occupancy, system, and process memory occupancy, number of processes, rule engine resource status, and cluster partition and healing. EMQX triggers and records these changes when they exceed a threshold or deviate from expectations, and removes them from the list once they are restored.
 
 This page introduces the alarm information EMQX provides, how to obtain and check the detailed alarm information, and how to configure the alarm settings and thresholds in EMQX. The monitoring and alarm function keeps you notified of potential problems during operation. By configuring alarms and setting appropriate thresholds, you can make sure that EMQX remains secure, stable, and reliable.
 
@@ -30,15 +30,17 @@ The levels are defined from development perspectives and are only for recommenda
 
 **Alarm list for EMQX Open Source edition:**
 
-| **Alarm**                 | Level    | Description                                                  | **Details**                              | **Threshold**                                                |
-| :------------------------ | -------- | :----------------------------------------------------------- | :--------------------------------------- | :----------------------------------------------------------- |
-| high_system_memory_usage  | Warning  | System memory usage is too high                              | "System memory usage is higher than ~p%" | `os_mon.sysmem_high_watermark = 70%`                         |
-| high_process_memory_usage | Warning  | Single Erlang process memory usage is too high (percentage of system memory usage) | Process memory usage is higher than ~p%  | `os_mon.procmem_high_watermark = 5%`                         |
-| high_cpu_usage            | Warning  | CPU usage is too high                                        | ~p% cpu usage                            | `os_mon.cpu_high_watermark = 80%` `os_mon.cpu_low_watermark = 60%` |
-| too_many_processes        | Warning  | Too many processes                                           | ~p% process usage                        | `vm_mon.process_high_watermark = 80%` `vm_mon.process_low_watermark = 60%` |
-| partition                 | Critical | Partition occurs at node                                     | Partition occurs at node ~s              | -                                                            |
-| resource                  | Critical | Resource is disconnected                                     | Resource ~s(~s) is down                  | -                                                            |
-| conn_congestion           | Critical | Connection process congestion                                | connection congested                     | -                                                            |
+| **Alarm**                           | Level    | Description                                                                        | **Details**                              | **Threshold**                                                              |
+|:------------------------------------|----------|:-----------------------------------------------------------------------------------|:-----------------------------------------|:---------------------------------------------------------------------------|
+| high_system_memory_usage            | Warning  | System memory usage is too high                                                    | "System memory usage is higher than ~p%" | `os_mon.sysmem_high_watermark = 70%`                                       |
+| high_process_memory_usage           | Warning  | Single Erlang process memory usage is too high (percentage of system memory usage) | Process memory usage is higher than ~p%  | `os_mon.procmem_high_watermark = 5%`                                       |
+| high_cpu_usage                      | Warning  | CPU usage is too high                                                              | ~p% cpu usage                            | `os_mon.cpu_high_watermark = 80%` `os_mon.cpu_low_watermark = 60%`         |
+| too_many_processes                  | Warning  | Too many processes                                                                 | ~p% process usage                        | `vm_mon.process_high_watermark = 80%` `vm_mon.process_low_watermark = 60%` |
+| mnesia_transaction_manager_overload | Warning  | mnesia overloaded; mailbox size: N                                                 | mailbox size = N                         | `sysmon.mnesia_tm_mailbox_threshold = 500`                                 |
+| broker_pool_overload                | Warning  | broker pool overloaded; mailbox size: N                                            | mailbox size = N                         | `sysmon.broker_pool_mailbox_threshold = 500`                               |
+| partition                           | Critical | Partition occurs at node                                                           | Partition occurs at node ~s              | -                                                                          |
+| resource                            | Critical | Resource is disconnected                                                           | Resource ~s(~s) is down                  | -                                                                          |
+| conn_congestion                     | Critical | Connection process congestion                                                      | connection congested                     | -                                                                          |
 
 **Alarm list for EMQX Enterprise edition:**
 
@@ -56,7 +58,7 @@ The levels are defined from development perspectives and are only for recommenda
 
 ## Get Alarms
 
-EMQX provides you with various ways to get alarms and check detailed alarm information. One way is to view the alarms on EMQX Dashboard, where you can view a list of active or historical alarms. However, it is only a central place for easy access to an overview of alarms that have been triggered. Another way is to subscribe to system topics through MQTT to receive real-time notifications of alarms with detailed alarm information. Alarms can also be accessed from the log or via REST API. 
+EMQX provides you with various ways to get alarms and check detailed alarm information. One way is to view the alarms on EMQX Dashboard, where you can view a list of active or historical alarms. However, it is only a central place for easy access to an overview of alarms that have been triggered. Another way is to subscribe to system topics through MQTT to receive real-time notifications of alarms with detailed alarm information. Alarms can also be accessed from the log or via REST API.
 
 ### View Alarms on Dashboard
 
@@ -116,8 +118,8 @@ The settings for alarms can only be configured by modifying the configuration it
 
 Alarm thresholds can be configured on EMQX Dashboard. There are two ways to launch the **Monitoring** page for configuring the alarm thresholds:
 
-1. On the **Alarms** page, click the **Setting** button and you will be led to the **Monitoring** page. 
-2. From the left navigation menu, click **Management** -> **Monitoring**. 
+1. On the **Alarms** page, click the **Setting** button and you will be led to the **Monitoring** page.
+2. From the left navigation menu, click **Management** -> **Monitoring**.
 
 On the  **Monitoring** -> **System** tab, click the **Erlang VM** tab, you can configure the following items for the system performance of the Erlang Virtual Machine:
 
@@ -129,7 +131,7 @@ On the  **Monitoring** -> **System** tab, click the **Erlang VM** tab, you can c
 - **Process low watermark**: Specify the threshold value of processes that can simultaneously exist at the local node. When the percentage is lowered to the specified number, an alarm is cleared. The default value is `60` percent.
 
 - **Enable Long GC monitoring**: Disabled by default. When enabled, a warning-level log `long_gc` is emitted and an MQTT message is published to the system topic `$SYS/sysmon/long_gc` when an Erlang process spends long time performing garbage collection.
-- **Enable Long Schedule monitoring**: Enabled by default, which means when the Erlang VM detects a task scheduled for too long, a warning level log `long_schedule` is emitted. You can set the proper time scheduled for a task in the text box. The default value is `240` milliseconds. 
+- **Enable Long Schedule monitoring**: Enabled by default, which means when the Erlang VM detects a task scheduled for too long, a warning level log `long_schedule` is emitted. You can set the proper time scheduled for a task in the text box. The default value is `240` milliseconds.
 
 - **Enable Large Heap monitoring**: Enabled by default, which means when an Erlang process consumed a large amount of memory for its heap space, a warning level log `large_heap` is emitted, and an MQTT message is published to the system topic `$SYS/sysmon/large_heap`. You can set the limit of space bytesize in the text box. The default value is `32` MB.
 
