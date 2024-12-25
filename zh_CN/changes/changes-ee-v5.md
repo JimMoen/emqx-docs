@@ -1,5 +1,127 @@
 # EMQX 企业版 v5 版本
 
+## 5.8.4
+
+*发布日期：2024-12-25*
+
+升级前请查看已知问题列表和不兼容变更列表。
+
+### 增强
+
+#### MQTT 核心功能
+
+- [#13739](https://github.com/emqx/emqx/pull/13739) 新增支持清除整个集群的监控（统计）数据。现在可以通过向 `api/v5/monitor` 端点发送 `DELETE` 请求来清除所有收集到的监控指标。
+
+- [#14247](https://github.com/emqx/emqx/pull/14247) 如果客户端元数据中存在 `tns` 属性，该属性将被记录到日志中。
+
+  如果存在 `client_attrs.tns` 属性，它将被包含在日志元数据中。然而，如果客户端 ID 已经以 `tns` 值为前缀，则不会重复记录，以避免重复。
+
+- [#14353](https://github.com/emqx/emqx/pull/14353) 提升了会话重平衡和疏散过程的稳健性。之前，在某些集群错误情况下，会话疏散过程可能会陷入死循环。
+
+#### 规则引擎
+
+- [#14369](https://github.com/emqx/emqx/pull/14369) 在规则引擎中新增了两个与数量相关的函数：
+  - `is_empty`：判断一个 `Array` 或一个 `Map` 是否为空，则返回 `true`。
+  - `map_size`：返回 `Map` 中 Key 的数量。
+
+#### 数据集成
+
+- [#14110](https://github.com/emqx/emqx/pull/14110) Pulsar 驱动支持报告指标，提升了可观察性。现在报告以下指标：
+  - 排队消息数量
+  - 正在处理的消息数量
+  - 丢弃的消息数量
+- [#14410](https://github.com/emqx/emqx/pull/14410) EMQX 支持与[阿里云表格存储 (Tablestore)](https://cn.aliyun.com/product/ots) 的数据集成。
+
+#### 配置文件
+
+- [#14269](https://github.com/emqx/emqx/pull/14269) 添加了 `etc/base.hocon` 配置文件。本次版本引入了新的配置文件 `etc/base.hocon`，以增强配置管理的清晰度和可维护性。
+
+  之前，`emqx.conf` 是唯一的手动配置设置文件。然而，由于它位于配置覆盖层级的最上层，这导致了一些混淆。虽然在 `emqx.conf` 中设置的可变（非只读）配置可以通过 UI、API 或 CLI 修改并立即生效，但这些更改在节点重启后不会持久化，导致不一致的行为。
+
+  为了解决这个问题，我们添加了 `etc/base.hocon` 作为基础配置层。更新后的配置优先级顺序（从上到下）如下：
+
+  1. 环境变量
+  2. `etc/emqx.conf`
+  3. `data/configs/cluster.hocon`
+  4. `etc/base.hocon`
+
+  `etc/base.hocon` 文件作为配置的基础层。尽管此文件中的配置在节点启动后仍然可以修改，但它确保了行为的一致性，并保证配置的正确覆盖。
+
+#### 可观测性
+
+- [#14360](https://github.com/emqx/emqx/pull/14360) 在 Prometheus 指标中添加了按关闭原因分类的监听器关闭计数，计数器名为 `emqx_client_disconnected_reason`。示例输出：
+
+  ```
+  emqx_client_disconnected_reason{node="emqx@127.0.0.1",reason="takenover"} 1 emqx_client_disconnected_reason{node="emqx@127.0.0.1",reason="kicked"} 1
+  ```
+
+  目前，该功能仅适用于 TCP 和 TLS 监听器。
+
+### 修复
+
+#### MQTT 核心功能
+
+- [#14248](https://github.com/emqx/emqx/pull/14248) 修复了集群节点间偶发的连接问题，这些问题可能导致集群范围的路由表状态部分丢失。此修复确保了集群间更好的一致性和可靠性。
+- [#14272](https://github.com/emqx/emqx/pull/14272) 修复了通过 CLI 加载的 `auto_subscribe` 配置未生效的问题，尽管之前显示了成功消息。
+- [#14424](https://github.com/emqx/emqx/pull/14424) 修复了与排它订阅相关的成员状态消息错误地被记录为 `unexpected_info` 警告的问题。
+
+#### REST API
+
+- [#14317](https://github.com/emqx/emqx/pull/14317) 修复了管理 API 中分页累积的问题，通过移除一个不正确但未激活的条件子句。此修复防止了可能导致返回空页面的问题，并避免了未来可能的内部 API 误用。
+
+#### 数据集成
+
+- [#14318](https://github.com/emqx/emqx/pull/14318) 修复了 HTTP 连接器状态初始化的问题。此修复解决了由于 `function_clause` 错误引起的崩溃问题，该错误可能发生在 HTTP 作处理传入流量时，而其底层连接器正在重启。修复前，日志中可能会显示类似以下的错误信息：
+
+  ```
+  20:42:36.850 [error] msg: "resource_exception", info: #{error => {error, function_clause}, id => <<"action:http:a:connector:http:a">>, name => call_query, ...
+  ```
+
+- [#14319](https://github.com/emqx/emqx/pull/14319) 重构了资源管理的内部状态机，消除了多个竞态条件问题。例如，之前 HTTP 动作在处理传入流量时，如果遇到健康检查波动，可能会导致以下错误：
+
+  ```
+  2024-11-29T14:58:17.994119+00:00 [error] msg: action_not_found, connector: <<"connector:http:a">>, action_id: <<"action:http:a:connector:http:a">
+  ```
+
+- [#14362](https://github.com/emqx/emqx/pull/14362) 重构了资源管理器的状态机，防止了可能导致状态不一致的竞态条件。
+
+- [#14429](https://github.com/emqx/emqx/pull/14429) 修复了在底层连接器被禁用时规则动作指标的处理问题。之前，每条消息的失败计数器会分别在 `unknown` 和 `out_of_service` 两个类别中各自增加一次。通过此修复，只有 `out_of_service` 计数器会增加，从而提供更准确的指标。
+
+- [#14291](https://github.com/emqx/emqx/pull/14291) 该问题的修复升级了 Pulsar 生产者驱动，使其能够正确处理 `LookupType` （查找类型）为 `Redirect` 的响应。修复前，当 `LookupType` 响应类型为 `Redirect` 且生产者（重新）启动时，生产者会错误地尝试连接到返回的代理服务器节点，从而避免了无法发布消息的问题。以下是出现该问题时的示例日志：
+
+  ```
+  2024-11-25T20:40:54.140659+00:00 [error] [pulsar-producer][persistent://public/default/p3-partition-0] Response error:'ServiceNotReady', msg:"Namespace bundle for topic (persistent://public/default/p3-partition-0) not served by this instance. Please redo the lookup. Request is denied: namespace=public/default"
+  ```
+
+- [#14345](https://github.com/emqx/emqx/pull/14345) 修复了启动或重启一个已配置并启用 Kafka 消费者 source 的节点时可能导致崩溃日志的问题。该问题源于 Kafka 消费者监督进程启动失败，现已得到妥善处理。修复后，用户将不再在日志中看到如下错误信息：
+
+  ```
+  2024-12-03T17:11:31.861584+00:00 [warning] tag: CONNECTOR/KAFKA_CONSUMER, msg: add_channel_failed, reason: #{reason => {noproc,{gen_server,call,[emqx_bridge_sup,{start_child,#{id => emqx_bridge_kafka_consumer_sup,restart => permanent,shutdown => infinity,start => {emqx_bridge_kafka_consumer_sup,start_link,[]},type => supervisor,modules => [emqx_bridge_kafka_consumer_sup]}},infinity]}},stacktrace => [{gen_server,call,3,[{file,"gen_server.erl"},{line,419}]},{emqx_bridge_kafka_impl_consumer,ensure_consumer_supervisor_started,0,[{file,"src/emqx_bridge_kafka_impl_consumer.erl"},{line,395}]},{emqx_bridge_kafka_impl_consumer,start_consumer,5,[{file,"src/emqx_bridge_kafka_impl_consumer.erl"},{line,427}]},{emqx_bridge_kafka_impl_consumer,on_add_channel,4,[{file,"src/emqx_bridge_kafka_impl_consumer.erl"},{line,254}]},{emqx_resource,call_add_channel,5,[{file,"src/emqx_resource.erl"},{line,565}]},{emqx_resource_manager,add_channels_in_list,2,[{file,"src/emqx_resource_manager.erl"},{line,872}]},{emqx_resource_manager,channels_health_check,2,[{file,"src/emqx_resource_manager.erl"},{line,1304}]},{emqx_resource_manager,continue_resource_health_check_not_connected,2,[{file,"src/emqx_resource_manager.erl"},{line,1235}]},{gen_statem,loop_state_callback,11,[{file,"gen_statem.erl"},{line,1397}]},{proc_lib,init_p_do_apply,3,[{file,"proc_lib.erl"},{line,241}]}],exception => exit}, resource_id: <<"connector:kafka_consumer:a">>, channel_id: <<"source:kafka_consumer:b:connector:kafka_consumer:a">>
+  ```
+
+- [#14362](https://github.com/emqx/emqx/pull/14362) 更新了 MySQL 驱动程序，以解决崩溃问题并改善错误恢复。在此修复之前，用户可能会遇到系统在崩溃后无法恢复的问题，日志中可能会出现类似以下内容：
+
+  ```
+  crasher: initial call: mysql_conn:init/1, pid: <0.8940.0>, registered_name: [], exit: {timeout,[{gen_server,init_it,6,[{file,\"gen_server.erl\"},{line,961}]},{proc_lib,init_p_do_apply,3,[{file,\"proc_lib.erl\"},{line,241}]}]} Supervisor: {<0.8938.0>,ecpool_worker_sup}. Context: start_error. Reason: timeout. Offender: id={worker,1},pid=undefined. Generic server <0.23934.0> terminating. Reason: {{case_clause,{error,closed}},[{mysql_protocol,fetch_response,7,[{file,\"mysql_protocol.erl\"},{line,569}]},{mysql_conn,query,4,[{file,\"mysql_conn.erl\"},{line,648}]},{mysql_conn,handle_call,3,[{file,\"mysql_conn.erl\"},{line,316}]},{gen_server,try_handle_call,4,[{file,\"gen_server.erl\"},{line,1131}]},{gen_server,handle_msg,6,[{file,\"gen_server.erl\"},{line,1160}]},{proc_lib,init_p_do_apply,3,[{file,\"proc_lib.erl\"},{line,241}]}]} Supervisor: {<0.23913.0>,ecpool_worker_sup}. Context: shutdown. Reason: reached_max_restart_intensity. Offender: id={worker,8}
+  ```
+
+- [#14375](https://github.com/emqx/emqx/pull/14375) 增强了 Kafka 消费者 source 的模拟执行结果，添加了更详细的错误信息。此更新帮助用户在健康检查或模拟执行过程中，更好地诊断和调试与 Kafka 代理相关的问题。
+
+#### 命令行
+
+- [#14357](https://github.com/emqx/emqx/pull/14357) 修复了 `bin/emqx help` 命令的问题。此修复确保帮助命令现在显示正确的使用信息。现在，帮助命令显示了适当的详细信息，便于用户更容易理解如何使用该命令。
+
+#### 配置文件
+
+- [#14371](https://github.com/emqx/emqx/pull/14371) 修复了客户端 ID 覆盖表达式将 `undefined` 或 `null` 渲染为字面量字符串 `"undefined"` 或 `"null"` 的问题。现在，这些值会正确显示为空字符串，从而在变量未设置或没有值时提供更简洁和直观的输出。
+- [#14376](https://github.com/emqx/emqx/pull/14376) 增强了配置导入功能，以处理不存在的日志文件目录。如果指定的日志文件目录不存在，系统将回退到默认日志目录 `"${EMQX_LOG_DIR}"`，确保操作更加顺畅且不会出现错误。
+
+#### 可观测性
+
+- [#14267](https://github.com/emqx/emqx/pull/14267) 修改了日志记录行为，避免在日志和 HTTP 响应中遮盖文件路径类型的秘密字符串（例如，`file:///path/to/the/secret`）。
+
+- 修复了在获取永久 license `emqx_license_expiry_at`（表示 license 到期时间）相关的 Prometheus 指标值时出现的 `function_clause` 错误。
+
 ## 5.8.3
 
 *发布日期：2024-12-05*

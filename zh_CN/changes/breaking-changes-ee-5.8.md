@@ -1,5 +1,23 @@
 # EMQX 5.8 中的不兼容变更
 
+## e5.8.4
+
+- [#14360](https://github.com/emqx/emqx/pull/14360) 在请求 Prometheus 指标的 JSON 格式时，`client` 顶层键将始终是一个 JSON 对象数组，而不再是单个 JSON 对象。此更改可能会影响您的监控工具处理数据的方式。
+
+- [#14370](https://github.com/emqx/emqx/pull/14370) IoTDB 数据集成配置更改：
+
+  - 移除了自描述模板。EMQX 现在仅处理使用配置的数据模板的消息，不再尝试从消息 payload 中提取模板。
+
+  - 每条 MQTT 消息现在只能携带单一的 `payload`。不再支持携带多个 payload 数组。因此，每条 MQTT 消息将作为单个原子插入操作（单次或批量插入）处理到 IoTDB。通过一条 MQTT 消息生成多个 IoTDB 操作不再可能。
+
+  - `数据类型` 现在被视为普通值，而非模板值。
+
+  - REST API 驱动程序现在仅支持 IoTDB 1.3.x 及更高版本。
+
+  - Thrift 驱动程序现在支持“批量”模式。
+
+    **重要提示**：为了防止批量模式中的时间戳重叠，建议使用 MQTT 消息时间戳（`${timestamp}`）或在 payload 中包含时间字段（例如，`${payload.time}`）。
+
 ## e5.8.3
 
 - [#14305](https://github.com/emqx/emqx/pull/14305) 认证中移除了对哈希算法 `MD4`、`MD5` 和 `RIPEMD-160` 的支持，因为它们不符合 [NIST 安全哈希标准](https://www.nist.gov/publications/secure-hash-standard)。

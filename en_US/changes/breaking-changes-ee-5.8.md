@@ -1,5 +1,23 @@
 # Incompatible Changes in EMQX 5.8
 
+## e5.8.4
+
+- [#14360](https://github.com/emqx/emqx/pull/14360) When requesting Prometheus metrics in JSON format, the `client` top-level key will now always be an array of JSON objects, rather than a single JSON object. This change may affect how your monitoring tools process the data.
+
+- [#14370](https://github.com/emqx/emqx/pull/14370) IoTDB data integration configuration changes:
+  
+  - The self-describing template has been removed. EMQX now only processes messages using the configured data templates and no longer attempts to extract the template from the message payload.
+  
+  - Each MQTT message can now only carry a single `payload`. Arrays of payloads are no longer supported. As a result, an MQTT message is processed as a single atomic insert operation (either a single or batch insert) into IoTDB. Generating multiple IoTDB operations from a single MQTT message is no longer possible.
+  
+  - The `data type` is now treated as a plain value rather than a template value.
+  
+  - The REST API driver now only supports IoTDB 1.3.x and later versions.
+  
+  - The Thrift driver now supports "batch" mode. 
+  
+    **Important**: To prevent overlapping timestamps in batch mode, it’s recommended to use the MQTT message timestamp (`${timestamp}`) or include a time field in the payload (e.g., `${payload.time}`).
+
 ## e5.8.3
 
 - [#14305](https://github.com/emqx/emqx/pull/14305) Removed support of hashing algorithms `MD4`, `MD5`, and `RIPEMD-160` from authentication as they are not compliant with [NIST Secure Hash Standard](https://www.nist.gov/publications/secure-hash-standard).
