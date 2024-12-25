@@ -458,11 +458,60 @@ str(json_decode({"msg": "hello"})) = '{"msg":"hello"}'
 str(json_decode('[{"msg": "hello"}]')) = '[{"msg":"hello"}]'
 
 # Trailing zeros are truncated
-str(0.300000004) = '0.3'
+# Up to 10 digits are preserved past the decimal point
+str(0.30000000040) = '0.3000000004'
+str(0.30000000004) = '0.3'
 
-# Contains at most 10 number of digits past the decimal point
+# Rounded to 10 digits after the decimal
+# Rounded after the 10th digit
 str(3.14159265359) = '3.1415926536'
 str(0.000000314159265359) = '0.0000003142'
+```
+
+### str_utf8(Term: any) -> string
+
+Convert any `Term` into a string encoded in UTF-8.
+
+The behavior is identical to `str(Any)` in all other respects.
+
+```bash
+str_utf8(100) = '100'
+str_utf8(nth(1, json_decode('[false]'))) = 'false'
+str_utf8(json_decode({"msg": "hello"})) = '{"msg":"hello"}'
+str_utf8(json_decode('[{"msg": "hello"}]')) = '[{"msg":"hello"}]'
+
+# Trailing zeros are truncated
+# Up to 10 digits are preserved past the decimal point
+str_utf8(0.30000000040) = '0.3000000004'
+str_utf8(0.30000000004) = '0.3'
+
+# Rounded to 10 digits after the decimal
+# Rounded after the 10th digit
+str_utf8(3.14159265359) = '3.1415926536'
+str_utf8(0.000000314159265359) = '0.0000003142'
+```
+
+### str_utf16_le(Term: any) -> binary
+
+Converts any `Term` to a UTF-16 little-endian encoded binary string.
+
+::: tip
+
+UTF-16 little-endian encoded strings may not display properly in JSON objects. They are typically treated as binary data in EMQX. To convert them into a readable string of hexadecimal digits, use the `bin2hexstr` function.
+This encoding is generally used in systems like Microsoft SQL Server that rely on little-endian UTF-16 encoding.
+
+:::
+
+```bash
+# Unicode `h`:
+# |                          h(\u68)                              |
+# | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 1 | 1 | 0 | 1 | 0 | 0 | 0 | (big endian)
+# |              0x00             |              0x68             |
+# | 0 | 1 | 1 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | (little endian)
+# |              0x68             |              0x00             |
+str_utf16_le('h') = 'h\u0000'
+
+bin2hexstr(str_utf16_le('hello')) = '680065006C006C006F00'
 ```
 
 ## String Operation Functions
@@ -1314,6 +1363,22 @@ Converts a string of hexadecimal digits to the corresponding binary data. Exampl
 
 ```bash
 unzip(hexstr2bin('CB48CDC9C90700')) = 'hello'
+```
+
+### sqlserver_bin2hexstr(Data: binary | string) -> string
+
+Converts arbitrary binary data to a binary type in Microsoft SQL Server, that is, a HEX-encoded string with a `0x` prefix.
+
+::: tip
+
+This function can be used with the `CONVERT` function in Microsoft SQL Server to write UTF-16 little-endian encoded Unicode strings to SQL Server versions that do not support UTF-8 encoding.
+
+:::
+
+```
+sqlserver_bin2hexstr('hello') = '0x68656C6C6F'
+sqlserver_bin2hexstr(str_utf16_le('hello')) = '0x680065006C006C006F00'
+sqlserver_bin2hexstr(str_utf16_le('你好')) = '0x604F7D59'
 ```
 
 ### Schema Registry Functions

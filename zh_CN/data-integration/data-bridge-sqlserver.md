@@ -42,77 +42,12 @@ Microsoft SQL Server 数据集成是 EMQX 的开箱即用功能，结合了 EMQX
 
 ## 准备工作
 
-本节介绍了在 EMQX 中创建 Microsoft SQL Server 数据集成之前需要做的准备工作，包括如何设置 Microsoft SQL Server 服务器并创建数据库和数据表、安装并配置 ODBC 驱动程序。
+本节介绍了在 EMQX 中创建 Microsoft SQL Server 数据集成之前需要做的准备工作，包括如何安装并配置 ODBC 驱动程序、设置 Microsoft SQL Server 服务器并创建数据库和数据表。
 
 ### 前置准备
 
 - 了解[规则](./rules.md)。
 - 了解[数据集成](./data-bridges.md)。
-
-### 安装并连接到 Microsoft SQL Server
-
-本节描述如何使用 Docker 镜像在 Linux/MacOS 安装启动 Microsoft SQL Server 2019 以及如何使用 `sqlcmd` 连接到 Microsoft SQL Server。关于其他 Microsoft SQL Server 的安装方式，请参阅微软提供的 [Microsoft SQL Server 安装指南](https://learn.microsoft.com/zh-cn/sql/database-engine/install-windows/install-sql-server?view=sql-server-ver16)。
-
-1. 通过 Docker 安装并启动 Microsoft SQL Server。
-
-   Microsoft SQL Server 要求使用复杂密码，请参阅[使用复杂密码](https://learn.microsoft.com/zh-cn/sql/relational-databases/security/password-policy?view=sql-server-ver16#password-complexity)。
-   使用环境变量 `ACCEPT_EULA=Y` 启动 Docker 容器代表您同意 Microsoft 的 EULA 条款，另请参阅 [End-User Licensing Agreement](https://go.microsoft.com/fwlink/?linkid=857698)。
-
-   ```bash
-   # 启动一个 Microsoft SQL Server 容器并设置密码为 `mqtt_public1`
-   $ docker run --name sqlserver -p 1433:1433 -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD=mqtt_public1 -d mcr.microsoft.com/mssql/server:2022-CU15-ubuntu-22.04
-   ```
-
-2. 进入 Docker 容器。
-
-   ```bash
-   $ docker exec -it sqlserver bash
-   ```
-
-3. 在容器中连接到 Microsoft SQL Server 服务器，需要输入预设的密码。输入密码时字符不会回显。请输入密码后直接键入 `Enter`。
-
-   ```bash
-   $ /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P mqtt_public1 -N -C
-   1>
-   ```
-   
-
-::: tip
-
-Microsoft 提供的 Microsoft SQL Server 容器内已安装 `mssql-tools18`，但可执行文件并不在 `$PATH` 中。因此，在继续操作之前，您需要为 `sqlcmd` 指定可执行文件的路径。对于本例中的 Docker 部署，文件路径应为 `/opt`。
-
-关于更多 `mssql-tools18` 的使用，请阅读 [sqlcmd 实用工具](https://learn.microsoft.com/zh-cn/sql/tools/sqlcmd/sqlcmd-utility?view=sql-server-ver16)。
-
-:::
-
-至此 Microsoft SQL Server 2022 实例已经完成部署并可以连接。
-
-### 创建数据表
-
-使用已创建的连接和下面的 SQL 语句在 Microsoft SQL Server 中创建数据表。
-
-- 如需用于 MQTT 消息存储，创建数据表 `dbo.t_mqtt_msg`。该表存储每条消息的 MsgID、主题、QoS、Payload 以及发布时间。
-
-  ```sql
-  CREATE TABLE dbo.t_mqtt_msg (id int PRIMARY KEY IDENTITY(1000000001,1) NOT NULL,
-                               msgid   VARCHAR(64) NULL,
-                               topic   VARCHAR(100) NULL,
-                               qos     tinyint NOT NULL DEFAULT 0,
-                               payload VARCHAR(100) NULL,
-                               arrived DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
-  GO
-  ```
-
-- 如需用于设备上下线状态记录，创建数据表 `dbo.t_mqtt_events`。
-
-  ```sql
-  CREATE TABLE dbo.t_mqtt_events (id int PRIMARY KEY IDENTITY(1000000001,1) NOT NULL,
-                                  clientid VARCHAR(255) NULL,
-                                  event_type VARCHAR(255) NULL,
-                                  event_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
-  GO
-  ```
-
 
 ### 安装并配置 ODBC 驱动程序
 
@@ -162,6 +97,7 @@ EMQX 使用 `odbcinst.ini` 配置中的 DSN Name 来确定驱动动态库的路�
    ```
 
 2. 使用命令 `docker build -t emqx/emqx-enterprise:5.8.1-msodbc ` 构建镜像。
+
 3. 构建完成后可以使用 `docker image ls` 来获取本地的 image 列表，您也可以将镜像上传或保存备用。
 
 ::: tip 注意
@@ -175,6 +111,7 @@ EMQX 使用 `odbcinst.ini` 配置中的 DSN Name 来确定驱动动态库的路�
 本节介绍了在几种主流发行版上安装配置 FreeTDS 作为 ODBC 驱动程序的方式。在此处给出的示例中，DSN Name 均为 `ms-sql`。
 
 在 MacOS 上安装配置 FreeTDS 作为 ODBC 驱动程序:
+
 ```bash
 $ brew install unixodbc freetds
 $ vim /usr/local/etc/odbcinst.ini
@@ -187,6 +124,7 @@ FileUsage   = 1
 ```
 
 在 Centos 上安装配置 FreeTDS 作为 ODBC 驱动程序:
+
 ```bash
 $ yum install unixODBC unixODBC-devel freetds freetds-devel perl-DBD-ODBC perl-local-lib
 $ vim /etc/odbcinst.ini
@@ -201,6 +139,7 @@ FileUsage   = 1
 ```
 
 在 Ubuntu 上安装配置 FreeTDS 作为 ODBC 驱动程序（以 Ubuntu20.04 为例，其他版本请参考 ODBC 官方文档）:
+
 ```bash
 $ apt-get install unixodbc unixodbc-dev tdsodbc freetds-bin freetds-common freetds-dev libdbd-odbc-perl liblocal-lib-perl
 $ vim /etc/odbcinst.ini
@@ -211,6 +150,76 @@ Driver      = /usr/lib/x86_64-linux-gnu/odbc/libtdsodbc.so
 Setup       = /usr/lib/x86_64-linux-gnu/odbc/libtdsS.so
 FileUsage   = 1
 ```
+
+### 安装并连接到 Microsoft SQL Server
+
+本节描述如何使用 Docker 镜像在 Linux/MacOS 安装启动 Microsoft SQL Server 2019 以及如何使用 `sqlcmd` 连接到 Microsoft SQL Server。关于其他 Microsoft SQL Server 的安装方式，请参阅微软提供的 [Microsoft SQL Server 安装指南](https://learn.microsoft.com/zh-cn/sql/database-engine/install-windows/install-sql-server?view=sql-server-ver16)。
+
+1. 通过 Docker 安装并启动 Microsoft SQL Server。
+
+   Microsoft SQL Server 要求使用复杂密码，请参阅[使用复杂密码](https://learn.microsoft.com/zh-cn/sql/relational-databases/security/password-policy?view=sql-server-ver16#password-complexity)。
+   使用环境变量 `ACCEPT_EULA=Y` 启动 Docker 容器代表您同意 Microsoft 的 EULA 条款，另请参阅 [End-User Licensing Agreement](https://go.microsoft.com/fwlink/?linkid=857698)。
+
+   ```bash
+   # 启动一个 Microsoft SQL Server 容器并设置密码为 `mqtt_public1`
+   $ docker run --name sqlserver -p 1433:1433 -e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD=mqtt_public1 -d mcr.microsoft.com/mssql/server:2022-CU15-ubuntu-22.04
+   ```
+
+2. 进入 Docker 容器。
+
+   ```bash
+   $ docker exec -it sqlserver bash
+   ```
+
+3. 在容器中连接到 Microsoft SQL Server 服务器，需要输入预设的密码。输入密码时字符不会回显。请输入密码后直接键入 `Enter`。
+
+   ```bash
+   $ /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P mqtt_public1 -N -C
+   1>
+   ```
+
+
+::: tip
+
+Microsoft 提供的 Microsoft SQL Server 容器内已安装 `mssql-tools18`，但可执行文件并不在 `$PATH` 中。因此，在继续操作之前，您需要为 `sqlcmd` 指定可执行文件的路径。对于本例中的 Docker 部署，文件路径应为 `/opt`。
+
+关于更多 `mssql-tools18` 的使用，请阅读 [sqlcmd 实用工具](https://learn.microsoft.com/zh-cn/sql/tools/sqlcmd/sqlcmd-utility?view=sql-server-ver16)。
+
+:::
+
+至此 Microsoft SQL Server 2022 实例已经完成部署并可以连接。
+
+### 创建数据表
+
+使用已创建的连接和下面的 SQL 语句在 Microsoft SQL Server 中创建数据表。
+
+::: tip
+
+由于 ODBC 接口限制，如需要写入 Unicode 字符，如 CJK 字符或 Emoji 等，则需要使用函数转换为二进制格式后插入。在创建表时将需要存储 Unicode 字符的列类型设置为 `NVARCHAR`。
+
+:::
+
+- 如需用于 MQTT 消息存储，创建数据表 `dbo.t_mqtt_msg`。该表存储每条消息的 MsgID、主题、QoS、Payload 以及发布时间。
+
+  ```sql
+  CREATE TABLE dbo.t_mqtt_msg (id int PRIMARY KEY IDENTITY(1000000001,1) NOT NULL,
+                               msgid   VARCHAR(64) NULL,
+                               topic   VARCHAR(100) NULL,
+                               qos     tinyint NOT NULL DEFAULT 0,
+                               payload VARCHAR(100) NULL,
+                               arrived DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
+  GO
+  ```
+
+- 如需用于设备上下线状态记录，创建数据表 `dbo.t_mqtt_events`。
+
+  ```sql
+  CREATE TABLE dbo.t_mqtt_events (id int PRIMARY KEY IDENTITY(1000000001,1) NOT NULL,
+                                  clientid VARCHAR(255) NULL,
+                                  event_type VARCHAR(255) NULL,
+                                  event_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
+  GO
+  ```
 
 ## 创建连接器
 
@@ -251,10 +260,24 @@ FileUsage   = 1
 
    ::: tip
 
-   如果您初次使用 SQL，可以点击 **SQL 示例**和**启用调试**来学习和测试规则 SQL 的结果。
+   由于 ODBC 接口限制，如需要写入 Unicode 字符，如 CJK 字符或 Emoji 等，则需要使用函数转换为二进制格式后插入。在创建规则时使用内置函数将字符串转换为 UTF-16-little-endian 编码的二进制串。
 
+   ```sql{2}
+   SELECT
+     sqlserver_bin2hexstr(str_utf16_le(payload)) as payload
+     *
+   FROM
+     "t/#"
+   ```
+   
    :::
-
+   
+   ::: tip
+   
+   如果您初次使用 SQL，可以点击 **SQL 示例**和**启用调试**来学习和测试规则 SQL 的结果。
+   
+   :::
+   
 4. 点击右侧的**添加动作**按钮，为规则在被触发的情况下指定一个动作。通过这个动作，EMQX 会将经规则处理的数据发送到 Microsoft SQL Server。
 
 5. 在**动作类型**下拉框中选择 `Microsoft SQL Server`，保持**动作**下拉框为默认的`创建动作`选项，您也可以选择一个之前已经创建好的 Microsoft SQL Server Sink。此示例将创建一个全新的 Sink 并添加到规则中。
@@ -263,11 +286,21 @@ FileUsage   = 1
 
 7. 从**连接器**下拉框中选择刚刚创建的 `my_sqlserver`。您也可以通过点击下拉框旁边的按钮创建一个新的连接器。有关配置参数，请参见[创建连接器](#创建连接器)。
 
-9. 配置 **SQL 模板**。如需实现对指定主题消息的转发，使用如下 SQL 语句完成数据插入。此处为[预处理 SQL](./data-bridges.md#sql-预处理)，字段不应当包含引号，SQL 末尾不要带分号 `;`。
+8. 配置 **SQL 模板**。如需实现对指定主题消息的转发，使用如下 SQL 语句完成数据插入。此处为[预处理 SQL](./data-bridges.md#sql-预处理)，字段不应当包含引号，SQL 末尾不要带分号 `;`。
 
    ```sql
    insert into dbo.t_mqtt_msg(msgid, topic, qos, payload) values ( ${id}, ${topic}, ${qos}, ${payload} )
    ```
+
+   ::: tip
+
+   由于 ODBC 接口限制，如需要写入 Unicode 字符，如 CJK 字符或 Emoji 等，则需要使用函数转换为二进制格式后插入。在 SQL 模板中使用 `CONVERT` 函数，由 Microsoft SQL Server 将对应的二进制数据转为字符串。
+
+      ```sql
+   insert into dbo.t_mqtt_msg(msgid, topic, qos, payload) values ( ${id}, ${topic}, ${qos}, CONVERT(NVARCHAR(100), ${payload}) )
+      ```
+   
+   :::
    
    如果在模板中使用未定义的占位符变量，您可以切换**未定义变量作为 NULL** 开关（位于 **SQL 模板** 上方）来定义规则引擎的行为：
    
@@ -277,10 +310,10 @@ FileUsage   = 1
    
      ::: tip
    
-     如果您初次使用 SQL，可以点击 **SQL 示例** 和**启用调试**来学习和测试规则 SQL 的结果。
+     如果可能，应该始终启用此选项；禁用该选项仅用于确保向后兼容性。
    
      :::
-   
+
 10. 高级配置（可选），根据情况配置同步/异步模式，队列与批量等参数，详细请参考 [Sink 的特性](./data-bridges.md#sink-的特性)。
 
 11. 在点击**创建**按钮完成 Sink 创建之前，您可以使用**测试连接**来测试当前 Sink 到 Microsoft SQL Server 的连接是否成功。
