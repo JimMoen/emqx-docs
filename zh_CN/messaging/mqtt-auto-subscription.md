@@ -98,7 +98,7 @@
 
 - `${clientid}`: 客户端 ID。
 - `${username}`: 客户端用户名。
-- `${host}`: 客户端连接到 EMQX 时 IP 地址。
+- `${host}`: 客户端连接到 EMQX 时的 IP 地址。
 
 例如，当客户端 ID 为 `emqx_c`，配置主题为 `a/${clientid}` 时，客户端连接到 EMQX 后将自动订阅主题 `a/emqx_c`。
 
