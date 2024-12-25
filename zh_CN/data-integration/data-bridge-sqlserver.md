@@ -42,12 +42,114 @@ Microsoft SQL Server 数据集成是 EMQX 的开箱即用功能，结合了 EMQX
 
 ## 准备工作
 
-本节介绍了在 EMQX 中创建 Microsoft SQL Server 数据集成之前需要做的准备工作，包括如何设置 Microsoft SQL Server 服务器并创建数据库和数据表、安装并配置 ODBC 驱动程序。
+本节介绍了在 EMQX 中创建 Microsoft SQL Server 数据集成之前需要做的准备工作，包括如何安装并配置 ODBC 驱动程序、设置 Microsoft SQL Server 服务器并创建数据库和数据表。
 
 ### 前置准备
 
 - 了解[规则](./rules.md)。
 - 了解[数据集成](./data-bridges.md)。
+
+### 安装并配置 ODBC 驱动程序
+
+为了能够访问 Microsoft SQL Server 数据库，您需要安装并配置 ODBC 驱动程序。您可以使用 Microsoft 发布的 msodbcsql18 或者 FreeTDS 作为 ODBC 驱动程序。
+
+EMQX 使用 `odbcinst.ini` 配置中的 DSN Name 来确定驱动动态库的路径，有关的详细信息请参考[连接属性](https://learn.microsoft.com/zh-cn/sql/connect/odbc/linux-mac/connection-string-keywords-and-data-source-names-dsns?view=sql-server-ver16#connection-properties)。
+
+::: tip 注意
+
+您可以根据自己的喜好命名 DSN Name，但建议只使用英文字母。此外 DSN Name 大小写敏感。
+
+:::
+
+#### 安装配置 msodbcsql18 作为 ODBC 驱动程序
+
+<!-- TODO: update tag version in command and dockerfile -->
+
+如需安装配置 msodbcsql18 作为 ODBC 驱动程序，您需要参考微软的安装指导：
+
+- [安装 Microsoft ODBC Driver for SQL Server (Linux)](https://learn.microsoft.com/zh-cn/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server?view=sql-server-ver16&tabs=alpine18-install%2Calpine17-install%2Cdebian8-install%2Credhat7-13-install%2Crhel7-offline)
+- [安装 Microsoft ODBC Driver for SQL Server (macOS)](https://learn.microsoft.com/zh-cn/sql/connect/odbc/linux-mac/install-microsoft-odbc-driver-sql-server-macos?view=sql-server-ver16)
+
+受限于 [Microsoft EULA 条款](https://go.microsoft.com/fwlink/?linkid=857698)，EMQX 提供的 Docker 镜像不带有 msodbcsql18 驱动程序，如需在 Docker 或 Kubernetes 中使用该驱动程序，您需要基于 [EMQX Enterprise](https://hub.docker.com/r/emqx/emqx-enterprise) 提供的镜像构建带有 ODBC 驱动程序的新镜像以便在连接 Microsoft SQL Server 数据库时使用 msodbcsql18 驱动程序。使用构建的新镜像，代表您同意 [Microsoft SQL Server EULA 条款](https://go.microsoft.com/fwlink/?linkid=857698)。
+
+按照以下说明构建新镜像：
+
+1. 使用以下 Dockerfile 来构建新镜像。
+
+   本示例中的基础镜像版本为 `emqx/emqx-enterprise:5.8.1`。您可以根据所需的 EMQX Enterprise 版本来构建镜像，或者使用最新版本的镜像 `emqx/emqx-enterprise:latest`。
+
+   ```dockerfile
+   FROM emqx/emqx-enterprise:5.8.1
+   
+   USER root
+   
+   RUN apt-get -qq update && apt-get install -yqq curl gpg && \
+       . /etc/os-release && \
+       curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg && \
+       curl -fsSL "https://packages.microsoft.com/config/${ID}/${VERSION_ID}/prod.list" > /etc/apt/sources.list.d/mssql-release.list && \
+       apt-get -qq update && \
+       ACCEPT_EULA=Y apt-get install -yqq msodbcsql18 unixodbc-dev && \
+       sed -i 's/ODBC Driver 18 for SQL Server/ms-sql/g' /etc/odbcinst.ini && \
+       apt-get clean && \
+       rm -rf /var/lib/apt/lists/*
+   
+   USER emqx
+   ```
+
+2. 使用命令 `docker build -t emqx/emqx-enterprise:5.8.1-msodbc ` 构建镜像。
+
+3. 构建完成后可以使用 `docker image ls` 来获取本地的 image 列表，您也可以将镜像上传或保存备用。
+
+::: tip 注意
+
+使用上文给出的示例安装 msodbcsql18 驱动后，请确认 `odbcinst.ini` 中的 DSN Name 为 `ms-sql` 。您也可以根据需要修改 DSN Name。
+
+:::
+
+#### 安装配置 FreeTDS 作为 ODBC 驱动程序
+
+本节介绍了在几种主流发行版上安装配置 FreeTDS 作为 ODBC 驱动程序的方式。在此处给出的示例中，DSN Name 均为 `ms-sql`。
+
+在 MacOS 上安装配置 FreeTDS 作为 ODBC 驱动程序:
+
+```bash
+$ brew install unixodbc freetds
+$ vim /usr/local/etc/odbcinst.ini
+
+[ms-sql]
+Description = ODBC for FreeTDS
+Driver      = /usr/local/lib/libtdsodbc.so
+Setup       = /usr/local/lib/libtdsodbc.so
+FileUsage   = 1
+```
+
+在 Centos 上安装配置 FreeTDS 作为 ODBC 驱动程序:
+
+```bash
+$ yum install unixODBC unixODBC-devel freetds freetds-devel perl-DBD-ODBC perl-local-lib
+$ vim /etc/odbcinst.ini
+# 加入以下内容
+[ms-sql]
+Description = ODBC for FreeTDS
+Driver      = /usr/lib64/libtdsodbc.so
+Setup       = /usr/lib64/libtdsS.so.2
+Driver64    = /usr/lib64/libtdsodbc.so
+Setup64     = /usr/lib64/libtdsS.so.2
+FileUsage   = 1
+```
+
+在 Ubuntu 上安装配置 FreeTDS 作为 ODBC 驱动程序（以 Ubuntu20.04 为例，其他版本请参考 ODBC 官方文档）:
+
+```bash
+$ apt-get install unixodbc unixodbc-dev tdsodbc freetds-bin freetds-common freetds-dev libdbd-odbc-perl liblocal-lib-perl
+$ vim /etc/odbcinst.ini
+# 加入以下内容
+[ms-sql]
+Description = ODBC for FreeTDS
+Driver      = /usr/lib/x86_64-linux-gnu/odbc/libtdsodbc.so
+Setup       = /usr/lib/x86_64-linux-gnu/odbc/libtdsS.so
+FileUsage   = 1
+```
 
 ### 安装并连接到 Microsoft SQL Server
 
@@ -91,6 +193,12 @@ Microsoft 提供的 Microsoft SQL Server 容器内已安装 `mssql-tools18`，�
 
 使用已创建的连接和下面的 SQL 语句在 Microsoft SQL Server 中创建数据表。
 
+::: tip
+
+由于 ODBC 接口限制，如需要写入 Unicode 字符，如 CJK 字符或 Emoji 等，则需要使用函数转换为二进制格式后插入。在创建表时将需要存储 Unicode 字符的列类型设置为 `NVARCHAR`。
+
+:::
+
 - 如需用于 MQTT 消息存储，创建数据表 `dbo.t_mqtt_msg`。该表存储每条消息的 MsgID、主题、QoS、Payload 以及发布时间。
 
   ```sql
@@ -112,105 +220,6 @@ Microsoft 提供的 Microsoft SQL Server 容器内已安装 `mssql-tools18`，�
                                   event_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
   GO
   ```
-
-
-### 安装并配置 ODBC 驱动程序
-
-为了能够访问 Microsoft SQL Server 数据库，您需要安装并配置 ODBC 驱动程序。您可以使用 Microsoft 发布的 msodbcsql18 或者 FreeTDS 作为 ODBC 驱动程序。
-
-EMQX 使用 `odbcinst.ini` 配置中的 DSN Name 来确定驱动动态库的路径，有关的详细信息请参考[连接属性](https://learn.microsoft.com/zh-cn/sql/connect/odbc/linux-mac/connection-string-keywords-and-data-source-names-dsns?view=sql-server-ver16#connection-properties)。
-
-::: tip 注意
-
-您可以根据自己的喜好命名 DSN Name，但建议只使用英文字母。此外 DSN Name 大小写敏感。
-
-:::
-
-#### 安装配置 msodbcsql18 作为 ODBC 驱动程序
-
-<!-- TODO: update tag version in command and dockerfile -->
-
-如需安装配置 msodbcsql18 作为 ODBC 驱动程序，您需要参考微软的安装指导：
-
-- [安装 Microsoft ODBC Driver for SQL Server (Linux)](https://learn.microsoft.com/zh-cn/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server?view=sql-server-ver16&tabs=alpine18-install%2Calpine17-install%2Cdebian8-install%2Credhat7-13-install%2Crhel7-offline)
-- [安装 Microsoft ODBC Driver for SQL Server (macOS)](https://learn.microsoft.com/zh-cn/sql/connect/odbc/linux-mac/install-microsoft-odbc-driver-sql-server-macos?view=sql-server-ver16)
-
-受限于 [Microsoft EULA 条款](https://go.microsoft.com/fwlink/?linkid=857698)，EMQX 提供的 Docker 镜像不带有 msodbcsql18 驱动程序，如需在 Docker 或 Kubernetes 中使用该驱动程序，您需要基于 [EMQX Enterprise](https://hub.docker.com/r/emqx/emqx-enterprise) 提供的镜像构建带有 ODBC 驱动程序的新镜像以便在连接 Microsoft SQL Server 数据库时使用 msodbcsql18 驱动程序。使用构建的新镜像，代表您同意 [Microsoft SQL Server EULA 条款](https://go.microsoft.com/fwlink/?linkid=857698)。
-
-按照以下说明构建新镜像：
-
-1. 使用以下 Dockerfile 来构建新镜像。
-
-   本示例中的基础镜像版本为 `emqx/emqx-enterprise:5.8.1`。您可以根据所需的 EMQX Enterprise 版本来构建镜像，或者使用最新版本的镜像 `emqx/emqx-enterprise:latest`。
-
-   ```dockerfile
-   FROM emqx/emqx-enterprise:5.8.1
-
-   USER root
-
-   RUN apt-get -qq update && apt-get install -yqq curl gpg && \
-       . /etc/os-release && \
-       curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg && \
-       curl -fsSL "https://packages.microsoft.com/config/${ID}/${VERSION_ID}/prod.list" > /etc/apt/sources.list.d/mssql-release.list && \
-       apt-get -qq update && \
-       ACCEPT_EULA=Y apt-get install -yqq msodbcsql18 unixodbc-dev && \
-       sed -i 's/ODBC Driver 18 for SQL Server/ms-sql/g' /etc/odbcinst.ini && \
-       apt-get clean && \
-       rm -rf /var/lib/apt/lists/*
-
-   USER emqx
-   ```
-
-2. 使用命令 `docker build -t emqx/emqx-enterprise:5.8.1-msodbc ` 构建镜像。
-3. 构建完成后可以使用 `docker image ls` 来获取本地的 image 列表，您也可以将镜像上传或保存备用。
-
-::: tip 注意
-
-使用上文给出的示例安装 msodbcsql18 驱动后，请确认 `odbcinst.ini` 中的 DSN Name 为 `ms-sql` 。您也可以根据需要修改 DSN Name。
-
-:::
-
-#### 安装配置 FreeTDS 作为 ODBC 驱动程序
-
-本节介绍了在几种主流发行版上安装配置 FreeTDS 作为 ODBC 驱动程序的方式。在此处给出的示例中，DSN Name 均为 `ms-sql`。
-
-在 MacOS 上安装配置 FreeTDS 作为 ODBC 驱动程序:
-```bash
-$ brew install unixodbc freetds
-$ vim /usr/local/etc/odbcinst.ini
-
-[ms-sql]
-Description = ODBC for FreeTDS
-Driver      = /usr/local/lib/libtdsodbc.so
-Setup       = /usr/local/lib/libtdsodbc.so
-FileUsage   = 1
-```
-
-在 Centos 上安装配置 FreeTDS 作为 ODBC 驱动程序:
-```bash
-$ yum install unixODBC unixODBC-devel freetds freetds-devel perl-DBD-ODBC perl-local-lib
-$ vim /etc/odbcinst.ini
-# 加入以下内容
-[ms-sql]
-Description = ODBC for FreeTDS
-Driver      = /usr/lib64/libtdsodbc.so
-Setup       = /usr/lib64/libtdsS.so.2
-Driver64    = /usr/lib64/libtdsodbc.so
-Setup64     = /usr/lib64/libtdsS.so.2
-FileUsage   = 1
-```
-
-在 Ubuntu 上安装配置 FreeTDS 作为 ODBC 驱动程序（以 Ubuntu20.04 为例，其他版本请参考 ODBC 官方文档）:
-```bash
-$ apt-get install unixodbc unixodbc-dev tdsodbc freetds-bin freetds-common freetds-dev libdbd-odbc-perl liblocal-lib-perl
-$ vim /etc/odbcinst.ini
-# 加入以下内容
-[ms-sql]
-Description = ODBC for FreeTDS
-Driver      = /usr/lib/x86_64-linux-gnu/odbc/libtdsodbc.so
-Setup       = /usr/lib/x86_64-linux-gnu/odbc/libtdsS.so
-FileUsage   = 1
-```
 
 ## 创建连接器
 
@@ -251,10 +260,24 @@ FileUsage   = 1
 
    ::: tip
 
-   如果您初次使用 SQL，可以点击 **SQL 示例**和**启用调试**来学习和测试规则 SQL 的结果。
+   由于 ODBC 接口限制，如需要写入 Unicode 字符，如 CJK 字符或 Emoji 等，则需要使用函数转换为二进制格式后插入。在创建规则时使用内置函数将字符串转换为 UTF-16-little-endian 编码的二进制串。
 
+   ```sql{2}
+   SELECT
+     sqlserver_bin2hexstr(str_utf16_le(payload)) as payload
+     *
+   FROM
+     "t/#"
+   ```
+   
    :::
-
+   
+   ::: tip
+   
+   如果您初次使用 SQL，可以点击 **SQL 示例**和**启用调试**来学习和测试规则 SQL 的结果。
+   
+   :::
+   
 4. 点击右侧的**添加动作**按钮，为规则在被触发的情况下指定一个动作。通过这个动作，EMQX 会将经规则处理的数据发送到 Microsoft SQL Server。
 
 5. 在**动作类型**下拉框中选择 `Microsoft SQL Server`，保持**动作**下拉框为默认的`创建动作`选项，您也可以选择一个之前已经创建好的 Microsoft SQL Server Sink。此示例将创建一个全新的 Sink 并添加到规则中。
@@ -263,22 +286,32 @@ FileUsage   = 1
 
 7. 从**连接器**下拉框中选择刚刚创建的 `my_sqlserver`。您也可以通过点击下拉框旁边的按钮创建一个新的连接器。有关配置参数，请参见[创建连接器](#创建连接器)。
 
-9. 配置 **SQL 模板**。如需实现对指定主题消息的转发，使用如下 SQL 语句完成数据插入。此处为[预处理 SQL](./data-bridges.md#sql-预处理)，字段不应当包含引号，SQL 末尾不要带分号 `;`。
+8. 配置 **SQL 模板**。如需实现对指定主题消息的转发，使用如下 SQL 语句完成数据插入。此处为[预处理 SQL](./data-bridges.md#sql-预处理)，字段不应当包含引号，SQL 末尾不要带分号 `;`。
 
    ```sql
    insert into dbo.t_mqtt_msg(msgid, topic, qos, payload) values ( ${id}, ${topic}, ${qos}, ${payload} )
    ```
 
+   ::: tip
+
+   由于 ODBC 接口限制，如需要写入 Unicode 字符，如 CJK 字符或 Emoji 等，则需要使用函数转换为二进制格式后插入。在 SQL 模板中使用 `CONVERT` 函数，由 Microsoft SQL Server 将对应的二进制数据转为字符串。
+
+      ```sql
+   insert into dbo.t_mqtt_msg(msgid, topic, qos, payload) values ( ${id}, ${topic}, ${qos}, CONVERT(NVARCHAR(100), ${payload}) )
+      ```
+   
+   :::
+   
    如果在模板中使用未定义的占位符变量，您可以切换**未定义变量作为 NULL** 开关（位于 **SQL 模板** 上方）来定义规则引擎的行为：
-
+   
    - **关闭**（默认）：规则引擎可以将字符串 `undefined` 插入数据库。
-
+   
    - **启用**：允许规则引擎在变量未定义时将 `NULL` 插入数据库。
-
+   
      ::: tip
-
-     如果您初次使用 SQL，可以点击 **SQL 示例** 和**启用调试**来学习和测试规则 SQL 的结果。
-
+   
+     如果可能，应该始终启用此选项；禁用该选项仅用于确保向后兼容性。
+   
      :::
 
 10. 高级配置（可选），根据情况配置同步/异步模式，队列与批量等参数，详细请参考 [Sink 的特性](./data-bridges.md#sink-的特性)。
@@ -292,36 +325,6 @@ FileUsage   = 1
 现在您已成功创建了通过 Microsoft SQL Server Sink 将数据转发到 Microsoft SQL Server 的规则，同时在**规则**页面的**动作(Sink)** 标签页看到新建的 Microsoft SQL Server Sink。
 
 您还可以点击 **集成** -> **Flow 设计器**可以查看拓扑，通过拓扑可以直观的看到，主题 `t/#` 下的消息在经过规则 `my_rule` 解析后被发送到 Microsoft SQL Server 中。
-
-由于 ODBC 接口限制，需要写入 Unicode 字符，如 CJK 字符或 Emoji 等，需要使用函数转换为二进制格式后插入。
-
-- 在创建表时将需要存储 Unicode 字符的列类型设置为 `NVARCHAR`。
-
-  ```sql{5}
-  CREATE TABLE dbo.t_mqtt_msg (id int PRIMARY KEY IDENTITY(1000000001,1) NOT NULL,
-                               msgid   VARCHAR(64) NULL,
-                               topic   VARCHAR(100) NULL,
-                               qos     tinyint NOT NULL DEFAULT 0,
-                               payload NVARCHAR(100) NULL,
-                               arrived DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
-  GO
-  ```
-
-- 在创建规则时使用内置函数将字符串转换为 UTF-16-little-endian 编码的二进制串。
-
-  ```sql{2}
-  SELECT
-    sqlserver_bin2hexstr(str_utf16_le(payload)) as payload
-    *
-  FROM
-    "t/#"
-  ```
-
-- 在 SQL 模板中使用 `CONVERT` 函数，由 Microsoft SQL Server 将对应的二进制数据转为字符串。
-
-  ```sql
-  insert into dbo.t_mqtt_msg(msgid, topic, qos, payload) values ( ${id}, ${topic}, ${qos}, CONVERT(NVARCHAR(100), ${payload}) )
-  ```
 
 ## 创建事件记录 Sink 规则
 
