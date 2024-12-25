@@ -1,6 +1,6 @@
 {
   "info": {
-    "version": "5.8.3-rc.1",
+    "version": "5.8.4-beta.1",
     "title": "EMQX API"
   },
   "components": {
@@ -726,14 +726,14 @@
           "client_attrs_init": {
             "default": [],
             "type": "array",
-            "description": "Specify how to initialize client attributes.<br/>Each client attribute can be initialized as `client_attrs.{NAME}`,<br/>where `{NAME}` is the name of the attribute specified in the config field `set_as_attr`.<br/>The initialized client attribute will be stored in the `client_attrs` property with the specified name,<br/>and can be used as a placeholder in a template for authentication and authorization.<br/>For example, use `${client_attrs.alias}` to render an HTTP POST body when `set_as_attr = alias`,<br/>or render listener config `moutpoint = devices/${client_attrs.alias}/` to initialize a per-client topic namespace.",
+            "description": "Specify how to initialize client attributes.<br/>Each client attribute can be initialized as `client_attrs.{NAME}`,<br/>where `{NAME}` is the name of the attribute specified in the config field `set_as_attr`.<br/><br/>The initialized client attribute will be stored in the `client_attrs` property with the specified name,<br/>and can be used as a variable to render a template for mountpoint, authentication and authorization requests.<br/><br/>For example, use `${client_attrs.tns}` to render an HTTP POST body when `set_as_attr = tns`,<br/>or render listener config `moutpoint = ${client_attrs.tns}/` for topic namespacing.",
             "items": {
               "$ref": "#/components/schemas/emqx.client_attrs_init"
             }
           },
           "clientid_override": {
             "default": "disabled",
-            "description": "A one line expression to evaluate a set of predefined string functions (like in the rule engine SQL statements).<br/>The expression can be a function call with nested calls as its arguments, or direct variable reference.<br/>So far, it does not provide user-defined variable binding (like `var a=1`) or user-defined functions.<br/>As an example, to extract the prefix of client ID delimited by a dot: `nth(1, tokens(username, '.'))`.<br/><br/>The variables pre-bound variables are:<br/>- `cn`: Client's TLS certificate common name.<br/>- `dn`: Client's TLS certificate distinguished name (the subject).<br/>- `clientid`: The original MQTT Client ID.<br/>- `username`: MQTT Client's username.<br/>- `client_attrs.{NAME}`: Client attributes initialized by per config `client_attrs_init`.<br/><br/>You can read more about variform expressions in EMQX docs.",
+            "description": "A one line expression to evaluate a set of predefined string functions (like in the rule engine SQL statements).<br/>The expression can be a function call with nested calls as its arguments, or direct variable reference.<br/>So far, it does not provide user-defined variable binding (like `var a=1`) or user-defined functions.<br/>As an example, to extract the prefix of username delimited by a dot: `nth(1, tokens(username, '.'))`.<br/><br/>The variables pre-bound variables are:<br/>- `clientid`: The original MQTT Client ID.<br/>- `username`: MQTT Client's username.<br/>- `client_attrs.{NAME}`: Client attributes initialized by per config `client_attrs_init`.<br/>For TLS clients, connected directly or via proxy-protocol (v2) enabled load balancer,<br/>some extra variables can be used:<br/>- `cn`: Client's TLS certificate common name.<br/>- `dn`: Client's TLS certificate distinguished name (the subject).<br/>- `peersni`: TLS server name indication sent by the client.<br/><br/>You can read more about variform expressions in EMQX docs.",
             "oneOf": [
               {
                 "type": "string"
@@ -2306,7 +2306,7 @@
           "mountpoint": {
             "default": "",
             "type": "string",
-            "description": "When publishing or subscribing, prefix all topics with a mountpoint string.<br/>The prefixed string will be removed from the topic name when the message<br/>is delivered to the subscriber. The mountpoint is a way that users can use<br/>to implement isolation of message routing between different listeners.<br/>For example if a client A subscribes to `t` with `listeners.tcp.\\<name>.mountpoint`<br/>set to `some_tenant`, then the client actually subscribes to the topic<br/>`some_tenant/t`. Similarly, if another client B (connected to the same listener<br/>as the client A) sends a message to topic `t`, the message is routed<br/>to all the clients subscribed `some_tenant/t`, so client A will receive the<br/>message, with topic name `t`.<br/><br/>Set to `\"\"` to disable the feature.<br/><br/><br/>Variables in mountpoint string:<br/>  - <code>${clientid}</code>: clientid<br/>  - <code>${username}</code>: username"
+            "description": "- Adds a static or templated prefix (e.g., `n1/` or `${username}/`) to topics used by clients in `SUBSCRIBE` and `UNSUBSCRIBE` requests, `PUBLISH` messages, and Will Message (if supplied in the `CONNECT` packet).<br/>- Removes this prefix from topics of messages published to the respective subscriptions.<br/><br/>The supported placeholders are:<br/>- `${username}`<br/>- `${clientid}`<br/>- `${zone}`<br/>- `${client_attrs.NAME}`<br/><br/>For example, with `mountpoint=\"${username}/\"` a client using `u1` as username will have:<br/>- Client SUBSCRIBE `sensors/#` -> `u1/sensors/#` internally in the broker.<br/>- Broker PUBLISH `u1/sensors/data` -> `sensors/data` sent to the client.<br/><br/>The prefix mount/unmount is applied to:<br/>- Will in `CONNECT`<br/>- `PUBLISH`<br/>- `SUBSCRIBE`<br/>- `UNSUBSCRIBE`<br/><br/>Note: mounting occurs **after authorization/ACL checks**."
           },
           "zone": {
             "default": "default",
@@ -2983,7 +2983,7 @@
           "mountpoint": {
             "default": "",
             "type": "string",
-            "description": "When publishing or subscribing, prefix all topics with a mountpoint string.<br/>The prefixed string will be removed from the topic name when the message<br/>is delivered to the subscriber. The mountpoint is a way that users can use<br/>to implement isolation of message routing between different listeners.<br/>For example if a client A subscribes to `t` with `listeners.tcp.\\<name>.mountpoint`<br/>set to `some_tenant`, then the client actually subscribes to the topic<br/>`some_tenant/t`. Similarly, if another client B (connected to the same listener<br/>as the client A) sends a message to topic `t`, the message is routed<br/>to all the clients subscribed `some_tenant/t`, so client A will receive the<br/>message, with topic name `t`.<br/><br/>Set to `\"\"` to disable the feature.<br/><br/><br/>Variables in mountpoint string:<br/>  - <code>${clientid}</code>: clientid<br/>  - <code>${username}</code>: username"
+            "description": "- Adds a static or templated prefix (e.g., `n1/` or `${username}/`) to topics used by clients in `SUBSCRIBE` and `UNSUBSCRIBE` requests, `PUBLISH` messages, and Will Message (if supplied in the `CONNECT` packet).<br/>- Removes this prefix from topics of messages published to the respective subscriptions.<br/><br/>The supported placeholders are:<br/>- `${username}`<br/>- `${clientid}`<br/>- `${zone}`<br/>- `${client_attrs.NAME}`<br/><br/>For example, with `mountpoint=\"${username}/\"` a client using `u1` as username will have:<br/>- Client SUBSCRIBE `sensors/#` -> `u1/sensors/#` internally in the broker.<br/>- Broker PUBLISH `u1/sensors/data` -> `sensors/data` sent to the client.<br/><br/>The prefix mount/unmount is applied to:<br/>- Will in `CONNECT`<br/>- `PUBLISH`<br/>- `SUBSCRIBE`<br/>- `UNSUBSCRIBE`<br/><br/>Note: mounting occurs **after authorization/ACL checks**."
           },
           "zone": {
             "default": "default",
@@ -4492,7 +4492,7 @@
         "properties": {
           "expression": {
             "type": "string",
-            "description": "A one line expression to evaluate a set of predefined string functions (like in the rule engine SQL statements).<br/>The expression can be a function call with nested calls as its arguments, or direct variable reference.<br/>So far, it does not provide user-defined variable binding (like `var a=1`) or user-defined functions.<br/>As an example, to extract the prefix of client ID delimited by a dot: `nth(1, tokens(clientid, '.'))`.<br/><br/>The variables pre-bound variables are:<br/>- `cn`: Client's TLS certificate common name.<br/>- `dn`: Client's TLS certificate distinguished name (the subject).<br/>- `clientid`: MQTT Client ID.<br/>- `username`: MQTT Client's username.<br/>- `user_property.{NAME}`: User properties in the CONNECT packet.<br/><br/>You can read more about variform expressions in EMQX docs."
+            "description": "A one line expression to evaluate a set of predefined string functions (like in the rule engine SQL statements).<br/>The expression can be a function call with nested calls as its arguments, or direct variable reference.<br/>So far, it does not provide user-defined variable binding (like `var a=1`) or user-defined functions.<br/>As an example, to extract the prefix of client ID delimited by a dot: `nth(1, tokens(clientid, '.'))`.<br/><br/>The variables pre-bound variables are:<br/>- `clientid`: MQTT Client ID.<br/>- `username`: MQTT Client's username.<br/>- `user_property.{NAME}`: User properties in the CONNECT packet.<br/>For TLS clients, connected directly or via proxy-protocol (v2) enabled load balancer,<br/>some extra variables can be used:<br/>- `cn`: Client's TLS certificate common name.<br/>- `dn`: Client's TLS certificate distinguished name (the subject).<br/>- `peersni`: TLS server name indication sent by the client.<br/><br/>You can read more about variform expressions in EMQX docs."
           },
           "set_as_attr": {
             "type": "string",
@@ -6524,7 +6524,7 @@
           "mountpoint": {
             "default": "",
             "type": "string",
-            "description": "When publishing or subscribing, prefix all topics with a mountpoint string.<br/>The prefixed string will be removed from the topic name when the message<br/>is delivered to the subscriber. The mountpoint is a way that users can use<br/>to implement isolation of message routing between different listeners.<br/>For example if a client A subscribes to `t` with `listeners.tcp.\\<name>.mountpoint`<br/>set to `some_tenant`, then the client actually subscribes to the topic<br/>`some_tenant/t`. Similarly, if another client B (connected to the same listener<br/>as the client A) sends a message to topic `t`, the message is routed<br/>to all the clients subscribed `some_tenant/t`, so client A will receive the<br/>message, with topic name `t`.<br/><br/>Set to `\"\"` to disable the feature.<br/><br/><br/>Variables in mountpoint string:<br/>  - <code>${clientid}</code>: clientid<br/>  - <code>${username}</code>: username"
+            "description": "- Adds a static or templated prefix (e.g., `n1/` or `${username}/`) to topics used by clients in `SUBSCRIBE` and `UNSUBSCRIBE` requests, `PUBLISH` messages, and Will Message (if supplied in the `CONNECT` packet).<br/>- Removes this prefix from topics of messages published to the respective subscriptions.<br/><br/>The supported placeholders are:<br/>- `${username}`<br/>- `${clientid}`<br/>- `${zone}`<br/>- `${client_attrs.NAME}`<br/><br/>For example, with `mountpoint=\"${username}/\"` a client using `u1` as username will have:<br/>- Client SUBSCRIBE `sensors/#` -> `u1/sensors/#` internally in the broker.<br/>- Broker PUBLISH `u1/sensors/data` -> `sensors/data` sent to the client.<br/><br/>The prefix mount/unmount is applied to:<br/>- Will in `CONNECT`<br/>- `PUBLISH`<br/>- `SUBSCRIBE`<br/>- `UNSUBSCRIBE`<br/><br/>Note: mounting occurs **after authorization/ACL checks**."
           },
           "zone": {
             "default": "default",
@@ -6659,7 +6659,7 @@
           "mountpoint": {
             "default": "",
             "type": "string",
-            "description": "When publishing or subscribing, prefix all topics with a mountpoint string.<br/>The prefixed string will be removed from the topic name when the message<br/>is delivered to the subscriber. The mountpoint is a way that users can use<br/>to implement isolation of message routing between different listeners.<br/>For example if a client A subscribes to `t` with `listeners.tcp.\\<name>.mountpoint`<br/>set to `some_tenant`, then the client actually subscribes to the topic<br/>`some_tenant/t`. Similarly, if another client B (connected to the same listener<br/>as the client A) sends a message to topic `t`, the message is routed<br/>to all the clients subscribed `some_tenant/t`, so client A will receive the<br/>message, with topic name `t`.<br/><br/>Set to `\"\"` to disable the feature.<br/><br/><br/>Variables in mountpoint string:<br/>  - <code>${clientid}</code>: clientid<br/>  - <code>${username}</code>: username"
+            "description": "- Adds a static or templated prefix (e.g., `n1/` or `${username}/`) to topics used by clients in `SUBSCRIBE` and `UNSUBSCRIBE` requests, `PUBLISH` messages, and Will Message (if supplied in the `CONNECT` packet).<br/>- Removes this prefix from topics of messages published to the respective subscriptions.<br/><br/>The supported placeholders are:<br/>- `${username}`<br/>- `${clientid}`<br/>- `${zone}`<br/>- `${client_attrs.NAME}`<br/><br/>For example, with `mountpoint=\"${username}/\"` a client using `u1` as username will have:<br/>- Client SUBSCRIBE `sensors/#` -> `u1/sensors/#` internally in the broker.<br/>- Broker PUBLISH `u1/sensors/data` -> `sensors/data` sent to the client.<br/><br/>The prefix mount/unmount is applied to:<br/>- Will in `CONNECT`<br/>- `PUBLISH`<br/>- `SUBSCRIBE`<br/>- `UNSUBSCRIBE`<br/><br/>Note: mounting occurs **after authorization/ACL checks**."
           },
           "zone": {
             "default": "default",
@@ -7023,7 +7023,7 @@
           "mountpoint": {
             "default": "",
             "type": "string",
-            "description": "When publishing or subscribing, prefix all topics with a mountpoint string.<br/>The prefixed string will be removed from the topic name when the message<br/>is delivered to the subscriber. The mountpoint is a way that users can use<br/>to implement isolation of message routing between different listeners.<br/>For example if a client A subscribes to `t` with `listeners.tcp.\\<name>.mountpoint`<br/>set to `some_tenant`, then the client actually subscribes to the topic<br/>`some_tenant/t`. Similarly, if another client B (connected to the same listener<br/>as the client A) sends a message to topic `t`, the message is routed<br/>to all the clients subscribed `some_tenant/t`, so client A will receive the<br/>message, with topic name `t`.<br/><br/>Set to `\"\"` to disable the feature.<br/><br/><br/>Variables in mountpoint string:<br/>  - <code>${clientid}</code>: clientid<br/>  - <code>${username}</code>: username"
+            "description": "- Adds a static or templated prefix (e.g., `n1/` or `${username}/`) to topics used by clients in `SUBSCRIBE` and `UNSUBSCRIBE` requests, `PUBLISH` messages, and Will Message (if supplied in the `CONNECT` packet).<br/>- Removes this prefix from topics of messages published to the respective subscriptions.<br/><br/>The supported placeholders are:<br/>- `${username}`<br/>- `${clientid}`<br/>- `${zone}`<br/>- `${client_attrs.NAME}`<br/><br/>For example, with `mountpoint=\"${username}/\"` a client using `u1` as username will have:<br/>- Client SUBSCRIBE `sensors/#` -> `u1/sensors/#` internally in the broker.<br/>- Broker PUBLISH `u1/sensors/data` -> `sensors/data` sent to the client.<br/><br/>The prefix mount/unmount is applied to:<br/>- Will in `CONNECT`<br/>- `PUBLISH`<br/>- `SUBSCRIBE`<br/>- `UNSUBSCRIBE`<br/><br/>Note: mounting occurs **after authorization/ACL checks**."
           },
           "zone": {
             "default": "default",
@@ -7336,7 +7336,7 @@
           "mountpoint": {
             "default": "",
             "type": "string",
-            "description": "When publishing or subscribing, prefix all topics with a mountpoint string.<br/>The prefixed string will be removed from the topic name when the message<br/>is delivered to the subscriber. The mountpoint is a way that users can use<br/>to implement isolation of message routing between different listeners.<br/>For example if a client A subscribes to `t` with `listeners.tcp.\\<name>.mountpoint`<br/>set to `some_tenant`, then the client actually subscribes to the topic<br/>`some_tenant/t`. Similarly, if another client B (connected to the same listener<br/>as the client A) sends a message to topic `t`, the message is routed<br/>to all the clients subscribed `some_tenant/t`, so client A will receive the<br/>message, with topic name `t`.<br/><br/>Set to `\"\"` to disable the feature.<br/><br/><br/>Variables in mountpoint string:<br/>  - <code>${clientid}</code>: clientid<br/>  - <code>${username}</code>: username"
+            "description": "- Adds a static or templated prefix (e.g., `n1/` or `${username}/`) to topics used by clients in `SUBSCRIBE` and `UNSUBSCRIBE` requests, `PUBLISH` messages, and Will Message (if supplied in the `CONNECT` packet).<br/>- Removes this prefix from topics of messages published to the respective subscriptions.<br/><br/>The supported placeholders are:<br/>- `${username}`<br/>- `${clientid}`<br/>- `${zone}`<br/>- `${client_attrs.NAME}`<br/><br/>For example, with `mountpoint=\"${username}/\"` a client using `u1` as username will have:<br/>- Client SUBSCRIBE `sensors/#` -> `u1/sensors/#` internally in the broker.<br/>- Broker PUBLISH `u1/sensors/data` -> `sensors/data` sent to the client.<br/><br/>The prefix mount/unmount is applied to:<br/>- Will in `CONNECT`<br/>- `PUBLISH`<br/>- `SUBSCRIBE`<br/>- `UNSUBSCRIBE`<br/><br/>Note: mounting occurs **after authorization/ACL checks**."
           },
           "zone": {
             "default": "default",
@@ -8105,7 +8105,7 @@
           "mountpoint": {
             "default": "",
             "type": "string",
-            "description": "When publishing or subscribing, prefix all topics with a mountpoint string.<br/>The prefixed string will be removed from the topic name when the message<br/>is delivered to the subscriber. The mountpoint is a way that users can use<br/>to implement isolation of message routing between different listeners.<br/>For example if a client A subscribes to `t` with `listeners.tcp.\\<name>.mountpoint`<br/>set to `some_tenant`, then the client actually subscribes to the topic<br/>`some_tenant/t`. Similarly, if another client B (connected to the same listener<br/>as the client A) sends a message to topic `t`, the message is routed<br/>to all the clients subscribed `some_tenant/t`, so client A will receive the<br/>message, with topic name `t`.<br/><br/>Set to `\"\"` to disable the feature.<br/><br/><br/>Variables in mountpoint string:<br/>  - <code>${clientid}</code>: clientid<br/>  - <code>${username}</code>: username"
+            "description": "- Adds a static or templated prefix (e.g., `n1/` or `${username}/`) to topics used by clients in `SUBSCRIBE` and `UNSUBSCRIBE` requests, `PUBLISH` messages, and Will Message (if supplied in the `CONNECT` packet).<br/>- Removes this prefix from topics of messages published to the respective subscriptions.<br/><br/>The supported placeholders are:<br/>- `${username}`<br/>- `${clientid}`<br/>- `${zone}`<br/>- `${client_attrs.NAME}`<br/><br/>For example, with `mountpoint=\"${username}/\"` a client using `u1` as username will have:<br/>- Client SUBSCRIBE `sensors/#` -> `u1/sensors/#` internally in the broker.<br/>- Broker PUBLISH `u1/sensors/data` -> `sensors/data` sent to the client.<br/><br/>The prefix mount/unmount is applied to:<br/>- Will in `CONNECT`<br/>- `PUBLISH`<br/>- `SUBSCRIBE`<br/>- `UNSUBSCRIBE`<br/><br/>Note: mounting occurs **after authorization/ACL checks**."
           },
           "zone": {
             "default": "default",
@@ -8483,7 +8483,7 @@
           "mountpoint": {
             "default": "",
             "type": "string",
-            "description": "When publishing or subscribing, prefix all topics with a mountpoint string.<br/>The prefixed string will be removed from the topic name when the message<br/>is delivered to the subscriber. The mountpoint is a way that users can use<br/>to implement isolation of message routing between different listeners.<br/>For example if a client A subscribes to `t` with `listeners.tcp.\\<name>.mountpoint`<br/>set to `some_tenant`, then the client actually subscribes to the topic<br/>`some_tenant/t`. Similarly, if another client B (connected to the same listener<br/>as the client A) sends a message to topic `t`, the message is routed<br/>to all the clients subscribed `some_tenant/t`, so client A will receive the<br/>message, with topic name `t`.<br/><br/>Set to `\"\"` to disable the feature.<br/><br/><br/>Variables in mountpoint string:<br/>  - <code>${clientid}</code>: clientid<br/>  - <code>${username}</code>: username"
+            "description": "- Adds a static or templated prefix (e.g., `n1/` or `${username}/`) to topics used by clients in `SUBSCRIBE` and `UNSUBSCRIBE` requests, `PUBLISH` messages, and Will Message (if supplied in the `CONNECT` packet).<br/>- Removes this prefix from topics of messages published to the respective subscriptions.<br/><br/>The supported placeholders are:<br/>- `${username}`<br/>- `${clientid}`<br/>- `${zone}`<br/>- `${client_attrs.NAME}`<br/><br/>For example, with `mountpoint=\"${username}/\"` a client using `u1` as username will have:<br/>- Client SUBSCRIBE `sensors/#` -> `u1/sensors/#` internally in the broker.<br/>- Broker PUBLISH `u1/sensors/data` -> `sensors/data` sent to the client.<br/><br/>The prefix mount/unmount is applied to:<br/>- Will in `CONNECT`<br/>- `PUBLISH`<br/>- `SUBSCRIBE`<br/>- `UNSUBSCRIBE`<br/><br/>Note: mounting occurs **after authorization/ACL checks**."
           },
           "zone": {
             "default": "default",
@@ -9537,7 +9537,7 @@
               "sha384",
               "sha512"
             ],
-            "description": "Specifies mac_fun for PBKDF2 hashing algorithm."
+            "description": "Specifies mac_fun for PBKDF2 hashing algorithm and md4, md5, ripemd160 are no longer supported since 5.8.3"
           },
           "iterations": {
             "type": "integer",
@@ -10211,7 +10211,7 @@
           "mountpoint": {
             "default": "",
             "type": "string",
-            "description": "When publishing or subscribing, prefix all topics with a mountpoint string.<br/>The prefixed string will be removed from the topic name when the message<br/>is delivered to the subscriber. The mountpoint is a way that users can use<br/>to implement isolation of message routing between different listeners.<br/>For example if a client A subscribes to `t` with `listeners.tcp.\\<name>.mountpoint`<br/>set to `some_tenant`, then the client actually subscribes to the topic<br/>`some_tenant/t`. Similarly, if another client B (connected to the same listener<br/>as the client A) sends a message to topic `t`, the message is routed<br/>to all the clients subscribed `some_tenant/t`, so client A will receive the<br/>message, with topic name `t`.<br/><br/>Set to `\"\"` to disable the feature.<br/><br/><br/>Variables in mountpoint string:<br/>  - <code>${clientid}</code>: clientid<br/>  - <code>${username}</code>: username"
+            "description": "- Adds a static or templated prefix (e.g., `n1/` or `${username}/`) to topics used by clients in `SUBSCRIBE` and `UNSUBSCRIBE` requests, `PUBLISH` messages, and Will Message (if supplied in the `CONNECT` packet).<br/>- Removes this prefix from topics of messages published to the respective subscriptions.<br/><br/>The supported placeholders are:<br/>- `${username}`<br/>- `${clientid}`<br/>- `${zone}`<br/>- `${client_attrs.NAME}`<br/><br/>For example, with `mountpoint=\"${username}/\"` a client using `u1` as username will have:<br/>- Client SUBSCRIBE `sensors/#` -> `u1/sensors/#` internally in the broker.<br/>- Broker PUBLISH `u1/sensors/data` -> `sensors/data` sent to the client.<br/><br/>The prefix mount/unmount is applied to:<br/>- Will in `CONNECT`<br/>- `PUBLISH`<br/>- `SUBSCRIBE`<br/>- `UNSUBSCRIBE`<br/><br/>Note: mounting occurs **after authorization/ACL checks**."
           },
           "zone": {
             "default": "default",
@@ -11096,7 +11096,7 @@
           "mountpoint": {
             "default": "",
             "type": "string",
-            "description": "When publishing or subscribing, prefix all topics with a mountpoint string.<br/>The prefixed string will be removed from the topic name when the message<br/>is delivered to the subscriber. The mountpoint is a way that users can use<br/>to implement isolation of message routing between different listeners.<br/>For example if a client A subscribes to `t` with `listeners.tcp.\\<name>.mountpoint`<br/>set to `some_tenant`, then the client actually subscribes to the topic<br/>`some_tenant/t`. Similarly, if another client B (connected to the same listener<br/>as the client A) sends a message to topic `t`, the message is routed<br/>to all the clients subscribed `some_tenant/t`, so client A will receive the<br/>message, with topic name `t`.<br/><br/>Set to `\"\"` to disable the feature.<br/><br/><br/>Variables in mountpoint string:<br/>  - <code>${clientid}</code>: clientid<br/>  - <code>${username}</code>: username"
+            "description": "- Adds a static or templated prefix (e.g., `n1/` or `${username}/`) to topics used by clients in `SUBSCRIBE` and `UNSUBSCRIBE` requests, `PUBLISH` messages, and Will Message (if supplied in the `CONNECT` packet).<br/>- Removes this prefix from topics of messages published to the respective subscriptions.<br/><br/>The supported placeholders are:<br/>- `${username}`<br/>- `${clientid}`<br/>- `${zone}`<br/>- `${client_attrs.NAME}`<br/><br/>For example, with `mountpoint=\"${username}/\"` a client using `u1` as username will have:<br/>- Client SUBSCRIBE `sensors/#` -> `u1/sensors/#` internally in the broker.<br/>- Broker PUBLISH `u1/sensors/data` -> `sensors/data` sent to the client.<br/><br/>The prefix mount/unmount is applied to:<br/>- Will in `CONNECT`<br/>- `PUBLISH`<br/>- `SUBSCRIBE`<br/>- `UNSUBSCRIBE`<br/><br/>Note: mounting occurs **after authorization/ACL checks**."
           },
           "zone": {
             "default": "default",
@@ -12985,7 +12985,7 @@
           "mountpoint": {
             "default": "",
             "type": "string",
-            "description": "When publishing or subscribing, prefix all topics with a mountpoint string.<br/>The prefixed string will be removed from the topic name when the message<br/>is delivered to the subscriber. The mountpoint is a way that users can use<br/>to implement isolation of message routing between different listeners.<br/>For example if a client A subscribes to `t` with `listeners.tcp.\\<name>.mountpoint`<br/>set to `some_tenant`, then the client actually subscribes to the topic<br/>`some_tenant/t`. Similarly, if another client B (connected to the same listener<br/>as the client A) sends a message to topic `t`, the message is routed<br/>to all the clients subscribed `some_tenant/t`, so client A will receive the<br/>message, with topic name `t`.<br/><br/>Set to `\"\"` to disable the feature.<br/><br/><br/>Variables in mountpoint string:<br/>  - <code>${clientid}</code>: clientid<br/>  - <code>${username}</code>: username"
+            "description": "- Adds a static or templated prefix (e.g., `n1/` or `${username}/`) to topics used by clients in `SUBSCRIBE` and `UNSUBSCRIBE` requests, `PUBLISH` messages, and Will Message (if supplied in the `CONNECT` packet).<br/>- Removes this prefix from topics of messages published to the respective subscriptions.<br/><br/>The supported placeholders are:<br/>- `${username}`<br/>- `${clientid}`<br/>- `${zone}`<br/>- `${client_attrs.NAME}`<br/><br/>For example, with `mountpoint=\"${username}/\"` a client using `u1` as username will have:<br/>- Client SUBSCRIBE `sensors/#` -> `u1/sensors/#` internally in the broker.<br/>- Broker PUBLISH `u1/sensors/data` -> `sensors/data` sent to the client.<br/><br/>The prefix mount/unmount is applied to:<br/>- Will in `CONNECT`<br/>- `PUBLISH`<br/>- `SUBSCRIBE`<br/>- `UNSUBSCRIBE`<br/><br/>Note: mounting occurs **after authorization/ACL checks**."
           },
           "zone": {
             "default": "default",
@@ -13330,7 +13330,7 @@
           "mountpoint": {
             "default": "",
             "type": "string",
-            "description": "When publishing or subscribing, prefix all topics with a mountpoint string.<br/>The prefixed string will be removed from the topic name when the message<br/>is delivered to the subscriber. The mountpoint is a way that users can use<br/>to implement isolation of message routing between different listeners.<br/>For example if a client A subscribes to `t` with `listeners.tcp.\\<name>.mountpoint`<br/>set to `some_tenant`, then the client actually subscribes to the topic<br/>`some_tenant/t`. Similarly, if another client B (connected to the same listener<br/>as the client A) sends a message to topic `t`, the message is routed<br/>to all the clients subscribed `some_tenant/t`, so client A will receive the<br/>message, with topic name `t`.<br/><br/>Set to `\"\"` to disable the feature.<br/><br/><br/>Variables in mountpoint string:<br/>  - <code>${clientid}</code>: clientid<br/>  - <code>${username}</code>: username"
+            "description": "- Adds a static or templated prefix (e.g., `n1/` or `${username}/`) to topics used by clients in `SUBSCRIBE` and `UNSUBSCRIBE` requests, `PUBLISH` messages, and Will Message (if supplied in the `CONNECT` packet).<br/>- Removes this prefix from topics of messages published to the respective subscriptions.<br/><br/>The supported placeholders are:<br/>- `${username}`<br/>- `${clientid}`<br/>- `${zone}`<br/>- `${client_attrs.NAME}`<br/><br/>For example, with `mountpoint=\"${username}/\"` a client using `u1` as username will have:<br/>- Client SUBSCRIBE `sensors/#` -> `u1/sensors/#` internally in the broker.<br/>- Broker PUBLISH `u1/sensors/data` -> `sensors/data` sent to the client.<br/><br/>The prefix mount/unmount is applied to:<br/>- Will in `CONNECT`<br/>- `PUBLISH`<br/>- `SUBSCRIBE`<br/>- `UNSUBSCRIBE`<br/><br/>Note: mounting occurs **after authorization/ACL checks**."
           },
           "zone": {
             "default": "default",
@@ -14740,7 +14740,7 @@
           "mountpoint": {
             "default": "",
             "type": "string",
-            "description": "When publishing or subscribing, prefix all topics with a mountpoint string.<br/>The prefixed string will be removed from the topic name when the message<br/>is delivered to the subscriber. The mountpoint is a way that users can use<br/>to implement isolation of message routing between different listeners.<br/>For example if a client A subscribes to `t` with `listeners.tcp.\\<name>.mountpoint`<br/>set to `some_tenant`, then the client actually subscribes to the topic<br/>`some_tenant/t`. Similarly, if another client B (connected to the same listener<br/>as the client A) sends a message to topic `t`, the message is routed<br/>to all the clients subscribed `some_tenant/t`, so client A will receive the<br/>message, with topic name `t`.<br/><br/>Set to `\"\"` to disable the feature.<br/><br/><br/>Variables in mountpoint string:<br/>  - <code>${clientid}</code>: clientid<br/>  - <code>${username}</code>: username"
+            "description": "- Adds a static or templated prefix (e.g., `n1/` or `${username}/`) to topics used by clients in `SUBSCRIBE` and `UNSUBSCRIBE` requests, `PUBLISH` messages, and Will Message (if supplied in the `CONNECT` packet).<br/>- Removes this prefix from topics of messages published to the respective subscriptions.<br/><br/>The supported placeholders are:<br/>- `${username}`<br/>- `${clientid}`<br/>- `${zone}`<br/>- `${client_attrs.NAME}`<br/><br/>For example, with `mountpoint=\"${username}/\"` a client using `u1` as username will have:<br/>- Client SUBSCRIBE `sensors/#` -> `u1/sensors/#` internally in the broker.<br/>- Broker PUBLISH `u1/sensors/data` -> `sensors/data` sent to the client.<br/><br/>The prefix mount/unmount is applied to:<br/>- Will in `CONNECT`<br/>- `PUBLISH`<br/>- `SUBSCRIBE`<br/>- `UNSUBSCRIBE`<br/><br/>Note: mounting occurs **after authorization/ACL checks**."
           },
           "zone": {
             "default": "default",
@@ -16591,7 +16591,7 @@
           "mountpoint": {
             "default": "",
             "type": "string",
-            "description": "When publishing or subscribing, prefix all topics with a mountpoint string.<br/>The prefixed string will be removed from the topic name when the message<br/>is delivered to the subscriber. The mountpoint is a way that users can use<br/>to implement isolation of message routing between different listeners.<br/>For example if a client A subscribes to `t` with `listeners.tcp.\\<name>.mountpoint`<br/>set to `some_tenant`, then the client actually subscribes to the topic<br/>`some_tenant/t`. Similarly, if another client B (connected to the same listener<br/>as the client A) sends a message to topic `t`, the message is routed<br/>to all the clients subscribed `some_tenant/t`, so client A will receive the<br/>message, with topic name `t`.<br/><br/>Set to `\"\"` to disable the feature.<br/><br/><br/>Variables in mountpoint string:<br/>  - <code>${clientid}</code>: clientid<br/>  - <code>${username}</code>: username"
+            "description": "- Adds a static or templated prefix (e.g., `n1/` or `${username}/`) to topics used by clients in `SUBSCRIBE` and `UNSUBSCRIBE` requests, `PUBLISH` messages, and Will Message (if supplied in the `CONNECT` packet).<br/>- Removes this prefix from topics of messages published to the respective subscriptions.<br/><br/>The supported placeholders are:<br/>- `${username}`<br/>- `${clientid}`<br/>- `${zone}`<br/>- `${client_attrs.NAME}`<br/><br/>For example, with `mountpoint=\"${username}/\"` a client using `u1` as username will have:<br/>- Client SUBSCRIBE `sensors/#` -> `u1/sensors/#` internally in the broker.<br/>- Broker PUBLISH `u1/sensors/data` -> `sensors/data` sent to the client.<br/><br/>The prefix mount/unmount is applied to:<br/>- Will in `CONNECT`<br/>- `PUBLISH`<br/>- `SUBSCRIBE`<br/>- `UNSUBSCRIBE`<br/><br/>Note: mounting occurs **after authorization/ACL checks**."
           },
           "zone": {
             "default": "default",
@@ -19722,7 +19722,7 @@
           "mountpoint": {
             "default": "",
             "type": "string",
-            "description": "When publishing or subscribing, prefix all topics with a mountpoint string.<br/>The prefixed string will be removed from the topic name when the message<br/>is delivered to the subscriber. The mountpoint is a way that users can use<br/>to implement isolation of message routing between different listeners.<br/>For example if a client A subscribes to `t` with `listeners.tcp.\\<name>.mountpoint`<br/>set to `some_tenant`, then the client actually subscribes to the topic<br/>`some_tenant/t`. Similarly, if another client B (connected to the same listener<br/>as the client A) sends a message to topic `t`, the message is routed<br/>to all the clients subscribed `some_tenant/t`, so client A will receive the<br/>message, with topic name `t`.<br/><br/>Set to `\"\"` to disable the feature.<br/><br/><br/>Variables in mountpoint string:<br/>  - <code>${clientid}</code>: clientid<br/>  - <code>${username}</code>: username"
+            "description": "- Adds a static or templated prefix (e.g., `n1/` or `${username}/`) to topics used by clients in `SUBSCRIBE` and `UNSUBSCRIBE` requests, `PUBLISH` messages, and Will Message (if supplied in the `CONNECT` packet).<br/>- Removes this prefix from topics of messages published to the respective subscriptions.<br/><br/>The supported placeholders are:<br/>- `${username}`<br/>- `${clientid}`<br/>- `${zone}`<br/>- `${client_attrs.NAME}`<br/><br/>For example, with `mountpoint=\"${username}/\"` a client using `u1` as username will have:<br/>- Client SUBSCRIBE `sensors/#` -> `u1/sensors/#` internally in the broker.<br/>- Broker PUBLISH `u1/sensors/data` -> `sensors/data` sent to the client.<br/><br/>The prefix mount/unmount is applied to:<br/>- Will in `CONNECT`<br/>- `PUBLISH`<br/>- `SUBSCRIBE`<br/>- `UNSUBSCRIBE`<br/><br/>Note: mounting occurs **after authorization/ACL checks**."
           },
           "zone": {
             "default": "default",
@@ -21959,11 +21959,11 @@
                 "example": {
                   "collectors": {
                     "mnesia": "disabled",
-                    "vm_msacc": "disabled",
+                    "vm_dist": "disabled",
                     "vm_memory": "disabled",
-                    "vm_system_info": "disabled",
+                    "vm_msacc": "disabled",
                     "vm_statistics": "disabled",
-                    "vm_dist": "disabled"
+                    "vm_system_info": "disabled"
                   },
                   "enable_basic_auth": false,
                   "push_gateway": {
@@ -22005,11 +22005,11 @@
                 "example": {
                   "collectors": {
                     "mnesia": "disabled",
-                    "vm_msacc": "disabled",
+                    "vm_dist": "disabled",
                     "vm_memory": "disabled",
-                    "vm_system_info": "disabled",
+                    "vm_msacc": "disabled",
                     "vm_statistics": "disabled",
-                    "vm_dist": "disabled"
+                    "vm_system_info": "disabled"
                   },
                   "enable_basic_auth": false,
                   "push_gateway": {
@@ -22036,11 +22036,11 @@
                   "value": {
                     "collectors": {
                       "mnesia": "disabled",
-                      "vm_msacc": "disabled",
+                      "vm_dist": "disabled",
                       "vm_memory": "disabled",
-                      "vm_system_info": "disabled",
+                      "vm_msacc": "disabled",
                       "vm_statistics": "disabled",
-                      "vm_dist": "disabled"
+                      "vm_system_info": "disabled"
                     },
                     "enable_basic_auth": false,
                     "push_gateway": {
@@ -22063,12 +22063,12 @@
                     },
                     "push_gateway_server": "http://127.0.0.1:9091",
                     "job_name": "${name}/instance/${name}~${host}",
-                    "vm_msacc_collector": "disabled",
-                    "vm_memory_collector": "disabled",
-                    "vm_system_info_collector": "disabled",
-                    "vm_statistics_collector": "disabled",
                     "mnesia_collector": "disabled",
-                    "vm_dist_collector": "disabled"
+                    "vm_dist_collector": "disabled",
+                    "vm_memory_collector": "disabled",
+                    "vm_msacc_collector": "disabled",
+                    "vm_statistics_collector": "disabled",
+                    "vm_system_info_collector": "disabled"
                   },
                   "summary": "legacy_deprecated_setting"
                 }
@@ -22273,8 +22273,8 @@
                       "headers": {
                         "content-type": "application/json"
                       },
-                      "method": "post",
                       "url": "http://127.0.0.1:18083",
+                      "method": "post",
                       "backend": "http",
                       "request_timeout": "5s",
                       "enable_pipelining": 100
@@ -22304,8 +22304,8 @@
                   "password_based:redis": {
                     "value": {
                       "mechanism": "password_based",
-                      "cmd": "HMGET ${username} password_hash salt",
                       "server": "127.0.0.1:6379",
+                      "cmd": "HMGET ${username} password_hash salt",
                       "database": 0,
                       "backend": "redis",
                       "password_hash_algorithm": {
@@ -22511,8 +22511,8 @@
                       "headers": {
                         "content-type": "application/json"
                       },
-                      "method": "post",
                       "url": "http://127.0.0.1:18083",
+                      "method": "post",
                       "backend": "http",
                       "request_timeout": "5s",
                       "enable_pipelining": 100
@@ -22542,8 +22542,8 @@
                   "password_based:redis": {
                     "value": {
                       "mechanism": "password_based",
-                      "cmd": "HMGET ${username} password_hash salt",
                       "server": "127.0.0.1:6379",
+                      "cmd": "HMGET ${username} password_hash salt",
                       "database": 0,
                       "backend": "redis",
                       "password_hash_algorithm": {
@@ -22701,8 +22701,8 @@
                     "headers": {
                       "content-type": "application/json"
                     },
-                    "method": "post",
                     "url": "http://127.0.0.1:18083",
+                    "method": "post",
                     "backend": "http",
                     "request_timeout": "5s",
                     "enable_pipelining": 100
@@ -22732,8 +22732,8 @@
                 "password_based:redis": {
                   "value": {
                     "mechanism": "password_based",
-                    "cmd": "HMGET ${username} password_hash salt",
                     "server": "127.0.0.1:6379",
+                    "cmd": "HMGET ${username} password_hash salt",
                     "database": 0,
                     "backend": "redis",
                     "password_hash_algorithm": {
@@ -22983,8 +22983,8 @@
                       "headers": {
                         "content-type": "application/json"
                       },
-                      "method": "post",
                       "url": "http://127.0.0.1:18083",
+                      "method": "post",
                       "backend": "http",
                       "request_timeout": "5s",
                       "enable_pipelining": 100
@@ -23014,8 +23014,8 @@
                   "password_based:redis": {
                     "value": {
                       "mechanism": "password_based",
-                      "cmd": "HMGET ${username} password_hash salt",
                       "server": "127.0.0.1:6379",
+                      "cmd": "HMGET ${username} password_hash salt",
                       "database": 0,
                       "backend": "redis",
                       "password_hash_algorithm": {
@@ -23173,8 +23173,8 @@
                     "headers": {
                       "content-type": "application/json"
                     },
-                    "method": "post",
                     "url": "http://127.0.0.1:18083",
+                    "method": "post",
                     "backend": "http",
                     "request_timeout": "5s",
                     "enable_pipelining": 100
@@ -23204,8 +23204,8 @@
                 "password_based:redis": {
                   "value": {
                     "mechanism": "password_based",
-                    "cmd": "HMGET ${username} password_hash salt",
                     "server": "127.0.0.1:6379",
+                    "cmd": "HMGET ${username} password_hash salt",
                     "database": 0,
                     "backend": "redis",
                     "password_hash_algorithm": {
@@ -23363,7 +23363,6 @@
                         }
                       }
                     ],
-                    "acceptors": 16,
                     "dtls_options": {
                       "verify": "verify_none",
                       "versions": [
@@ -23375,11 +23374,12 @@
                       "keyfile": "${EMQX_ETC_DIR}/certs/key.pem",
                       "cacertfile": "${EMQX_ETC_DIR}/certs/cacert.pem"
                     },
+                    "max_connections": 1024000,
                     "access_rules": [
                       "allow all"
                     ],
-                    "max_conn_rate": 1000,
-                    "max_connections": 1024000
+                    "acceptors": 16,
+                    "max_conn_rate": 1000
                   },
                   {
                     "name": "ssl-def",
@@ -23417,12 +23417,12 @@
                         }
                       }
                     ],
-                    "acceptors": 16,
+                    "max_connections": 1024000,
                     "access_rules": [
                       "allow all"
                     ],
-                    "max_conn_rate": 1000,
-                    "max_connections": 1024000
+                    "acceptors": 16,
+                    "max_conn_rate": 1000
                   },
                   {
                     "name": "tcp-def",
@@ -23456,9 +23456,76 @@
                         }
                       }
                     ],
+                    "max_connections": 1024000,
                     "acceptors": 16,
-                    "max_conn_rate": 1000,
-                    "max_connections": 1024000
+                    "max_conn_rate": 1000
+                  },
+                  {
+                    "name": "dtls-psk",
+                    "status": {
+                      "running": true,
+                      "max_connections": 1024000,
+                      "current_connections": 10
+                    },
+                    "type": "dtls",
+                    "bind": "22214",
+                    "node_status": [
+                      {
+                        "node": "emqx@127.0.0.1",
+                        "status": {
+                          "running": true,
+                          "max_connections": 1024000,
+                          "current_connections": 10
+                        }
+                      }
+                    ],
+                    "dtls_options": {
+                      "verify": "verify_none",
+                      "ciphers": "RSA-PSK-AES256-GCM-SHA384,RSA-PSK-AES256-CBC-SHA384,RSA-PSK-AES128-GCM-SHA256,RSA-PSK-AES128-CBC-SHA256,RSA-PSK-AES256-CBC-SHA,RSA-PSK-AES128-CBC-SHA",
+                      "versions": [
+                        "dtlsv1.2",
+                        "dtlsv1"
+                      ],
+                      "fail_if_no_peer_cert": false,
+                      "certfile": "${EMQX_ETC_DIR}/certs/cert.pem",
+                      "keyfile": "${EMQX_ETC_DIR}/certs/key.pem",
+                      "cacertfile": "${EMQX_ETC_DIR}/certs/cacert.pem",
+                      "user_lookup_fun": "emqx_tls_psk:lookup"
+                    },
+                    "max_connections": 1024000,
+                    "acceptors": 16,
+                    "max_conn_rate": 1000
+                  },
+                  {
+                    "name": "tcp-with-authn",
+                    "status": {
+                      "running": true,
+                      "max_connections": 1024000,
+                      "current_connections": 10
+                    },
+                    "type": "tcp",
+                    "bind": "22215",
+                    "authentication": {
+                      "mechanism": "password_based",
+                      "backend": "built_in_database",
+                      "password_hash_algorithm": {
+                        "name": "sha256"
+                      },
+                      "user_id_type": "username"
+                    },
+                    "node_status": [
+                      {
+                        "node": "emqx@127.0.0.1",
+                        "status": {
+                          "running": true,
+                          "max_connections": 1024000,
+                          "current_connections": 10
+                        }
+                      }
+                    ],
+                    "max_connections": 1024000,
+                    "acceptors": 16,
+                    "max_conn_rate": 1000
                   },
                   {
                     "name": "ws-def",
@@ -23501,9 +23568,9 @@
                       "check_origin_enable": false,
                       "piggyback": "single"
                     },
+                    "max_connections": 1024000,
                     "acceptors": 16,
-                    "max_conn_rate": 1000,
-                    "max_connections": 1024000
+                    "max_conn_rate": 1000
                   },
                   {
                     "name": "ws-ssl-def",
@@ -23559,76 +23626,9 @@
                       "check_origin_enable": false,
                       "piggyback": "single"
                     },
+                    "max_connections": 1024000,
                     "acceptors": 16,
-                    "max_conn_rate": 1000,
-                    "max_connections": 1024000
-                  },
-                  {
-                    "name": "dtls-psk",
-                    "status": {
-                      "running": true,
-                      "max_connections": 1024000,
-                      "current_connections": 10
-                    },
-                    "type": "dtls",
-                    "bind": "22214",
-                    "node_status": [
-                      {
-                        "node": "emqx@127.0.0.1",
-                        "status": {
-                          "running": true,
-                          "max_connections": 1024000,
-                          "current_connections": 10
-                        }
-                      }
-                    ],
-                    "acceptors": 16,
-                    "dtls_options": {
-                      "verify": "verify_none",
-                      "ciphers": "RSA-PSK-AES256-GCM-SHA384,RSA-PSK-AES256-CBC-SHA384,RSA-PSK-AES128-GCM-SHA256,RSA-PSK-AES128-CBC-SHA256,RSA-PSK-AES256-CBC-SHA,RSA-PSK-AES128-CBC-SHA",
-                      "versions": [
-                        "dtlsv1.2",
-                        "dtlsv1"
-                      ],
-                      "fail_if_no_peer_cert": false,
-                      "certfile": "${EMQX_ETC_DIR}/certs/cert.pem",
-                      "keyfile": "${EMQX_ETC_DIR}/certs/key.pem",
-                      "cacertfile": "${EMQX_ETC_DIR}/certs/cacert.pem",
-                      "user_lookup_fun": "emqx_tls_psk:lookup"
-                    },
-                    "max_conn_rate": 1000,
-                    "max_connections": 1024000
-                  },
-                  {
-                    "name": "tcp-with-authn",
-                    "status": {
-                      "running": true,
-                      "max_connections": 1024000,
-                      "current_connections": 10
-                    },
-                    "type": "tcp",
-                    "bind": "22215",
-                    "authentication": {
-                      "mechanism": "password_based",
-                      "backend": "built_in_database",
-                      "password_hash_algorithm": {
-                        "name": "sha256"
-                      },
-                      "user_id_type": "username"
-                    },
-                    "node_status": [
-                      {
-                        "node": "emqx@127.0.0.1",
-                        "status": {
-                          "running": true,
-                          "max_connections": 1024000,
-                          "current_connections": 10
-                        }
-                      }
-                    ],
-                    "acceptors": 16,
-                    "max_conn_rate": 1000,
-                    "max_connections": 1024000
+                    "max_conn_rate": 1000
                   }
                 ],
                 "schema": {
@@ -23763,7 +23763,6 @@
                         "backlog": 1024,
                         "active_n": 100
                       },
-                      "acceptors": 16,
                       "dtls_options": {
                         "verify": "verify_none",
                         "versions": [
@@ -23775,11 +23774,12 @@
                         "keyfile": "${EMQX_ETC_DIR}/certs/key.pem",
                         "cacertfile": "${EMQX_ETC_DIR}/certs/cacert.pem"
                       },
+                      "max_connections": 1024000,
                       "access_rules": [
                         "allow all"
                       ],
-                      "max_conn_rate": 1000,
-                      "max_connections": 1024000
+                      "acceptors": 16,
+                      "max_conn_rate": 1000
                     },
                     "summary": "A simple DTLS listener example"
                   },
@@ -23805,12 +23805,12 @@
                         "keyfile": "${EMQX_ETC_DIR}/certs/key.pem",
                         "cacertfile": "${EMQX_ETC_DIR}/certs/cacert.pem"
                       },
-                      "acceptors": 16,
+                      "max_connections": 1024000,
                       "access_rules": [
                         "allow all"
                       ],
-                      "max_conn_rate": 1000,
-                      "max_connections": 1024000
+                      "acceptors": 16,
+                      "max_conn_rate": 1000
                     },
                     "summary": "A simple SSL listener example"
                   },
@@ -23832,11 +23832,54 @@
                         "backlog": 1024,
                         "active_n": 100
                       },
+                      "max_connections": 1024000,
                       "acceptors": 16,
-                      "max_conn_rate": 1000,
-                      "max_connections": 1024000
+                      "max_conn_rate": 1000
                     },
                     "summary": "A simple TCP listener example"
+                  },
+                  "dtls_listener_with_psk_ciphers": {
+                    "value": {
+                      "name": "dtls-psk",
+                      "type": "dtls",
+                      "bind": "22214",
+                      "dtls_options": {
+                        "verify": "verify_none",
+                        "ciphers": "RSA-PSK-AES256-GCM-SHA384,RSA-PSK-AES256-CBC-SHA384,RSA-PSK-AES128-GCM-SHA256,RSA-PSK-AES128-CBC-SHA256,RSA-PSK-AES256-CBC-SHA,RSA-PSK-AES128-CBC-SHA",
+                        "versions": [
+                          "dtlsv1.2",
+                          "dtlsv1"
+                        ],
+                        "fail_if_no_peer_cert": false,
+                        "certfile": "${EMQX_ETC_DIR}/certs/cert.pem",
+                        "keyfile": "${EMQX_ETC_DIR}/certs/key.pem",
+                        "cacertfile": "${EMQX_ETC_DIR}/certs/cacert.pem",
+                        "user_lookup_fun": "emqx_tls_psk:lookup"
+                      },
+                      "max_connections": 1024000,
+                      "acceptors": 16,
+                      "max_conn_rate": 1000
+                    },
+                    "summary": "A DTLS listener with PSK example"
+                  },
+                  "lisetner_with_authn": {
+                    "value": {
+                      "name": "tcp-with-authn",
+                      "type": "tcp",
+                      "bind": "22215",
+                      "authentication": {
+                        "mechanism": "password_based",
+                        "backend": "built_in_database",
+                        "password_hash_algorithm": {
+                          "name": "sha256"
+                        },
+                        "user_id_type": "username"
+                      },
+                      "max_connections": 1024000,
+                      "acceptors": 16,
+                      "max_conn_rate": 1000
+                    },
+                    "summary": "A TCP listener with authentication example"
                   },
                   "ws_listener": {
                     "value": {
@@ -23865,9 +23908,9 @@
                         "check_origin_enable": false,
                         "piggyback": "single"
                       },
+                      "max_connections": 1024000,
                       "acceptors": 16,
-                      "max_conn_rate": 1000,
-                      "max_connections": 1024000
+                      "max_conn_rate": 1000
                     },
                     "summary": "A simple WebSocket listener example"
                   },
@@ -23911,54 +23954,11 @@
                         "check_origin_enable": false,
                         "piggyback": "single"
                       },
+                      "max_connections": 1024000,
                       "acceptors": 16,
-                      "max_conn_rate": 1000,
-                      "max_connections": 1024000
+                      "max_conn_rate": 1000
                     },
                     "summary": "A simple WebSocket/TLS listener example"
-                  },
-                  "dtls_listener_with_psk_ciphers": {
-                    "value": {
-                      "name": "dtls-psk",
-                      "type": "dtls",
-                      "bind": "22214",
-                      "acceptors": 16,
-                      "dtls_options": {
-                        "verify": "verify_none",
-                        "ciphers": "RSA-PSK-AES256-GCM-SHA384,RSA-PSK-AES256-CBC-SHA384,RSA-PSK-AES128-GCM-SHA256,RSA-PSK-AES128-CBC-SHA256,RSA-PSK-AES256-CBC-SHA,RSA-PSK-AES128-CBC-SHA",
-                        "versions": [
-                          "dtlsv1.2",
-                          "dtlsv1"
-                        ],
-                        "fail_if_no_peer_cert": false,
-                        "certfile": "${EMQX_ETC_DIR}/certs/cert.pem",
-                        "keyfile": "${EMQX_ETC_DIR}/certs/key.pem",
-                        "cacertfile": "${EMQX_ETC_DIR}/certs/cacert.pem",
-                        "user_lookup_fun": "emqx_tls_psk:lookup"
-                      },
-                      "max_conn_rate": 1000,
-                      "max_connections": 1024000
-                    },
-                    "summary": "A DTLS listener with PSK example"
-                  },
-                  "lisetner_with_authn": {
-                    "value": {
-                      "name": "tcp-with-authn",
-                      "type": "tcp",
-                      "bind": "22215",
-                      "authentication": {
-                        "mechanism": "password_based",
-                        "backend": "built_in_database",
-                        "password_hash_algorithm": {
-                          "name": "sha256"
-                        },
-                        "user_id_type": "username"
-                      },
-                      "acceptors": 16,
-                      "max_conn_rate": 1000,
-                      "max_connections": 1024000
-                    },
-                    "summary": "A TCP listener with authentication example"
                   }
                 },
                 "schema": {
@@ -24061,7 +24061,6 @@
                       "backlog": 1024,
                       "active_n": 100
                     },
-                    "acceptors": 16,
                     "dtls_options": {
                       "verify": "verify_none",
                       "versions": [
@@ -24073,11 +24072,12 @@
                       "keyfile": "${EMQX_ETC_DIR}/certs/key.pem",
                       "cacertfile": "${EMQX_ETC_DIR}/certs/cacert.pem"
                     },
+                    "max_connections": 1024000,
                     "access_rules": [
                       "allow all"
                     ],
-                    "max_conn_rate": 1000,
-                    "max_connections": 1024000
+                    "acceptors": 16,
+                    "max_conn_rate": 1000
                   },
                   "summary": "A simple DTLS listener example"
                 },
@@ -24103,12 +24103,12 @@
                       "keyfile": "${EMQX_ETC_DIR}/certs/key.pem",
                       "cacertfile": "${EMQX_ETC_DIR}/certs/cacert.pem"
                     },
-                    "acceptors": 16,
+                    "max_connections": 1024000,
                     "access_rules": [
                       "allow all"
                     ],
-                    "max_conn_rate": 1000,
-                    "max_connections": 1024000
+                    "acceptors": 16,
+                    "max_conn_rate": 1000
                   },
                   "summary": "A simple SSL listener example"
                 },
@@ -24130,11 +24130,54 @@
                       "backlog": 1024,
                       "active_n": 100
                     },
+                    "max_connections": 1024000,
                     "acceptors": 16,
-                    "max_conn_rate": 1000,
-                    "max_connections": 1024000
+                    "max_conn_rate": 1000
                   },
                   "summary": "A simple TCP listener example"
+                },
+                "dtls_listener_with_psk_ciphers": {
+                  "value": {
+                    "name": "dtls-psk",
+                    "type": "dtls",
+                    "bind": "22214",
+                    "dtls_options": {
+                      "verify": "verify_none",
+                      "ciphers": "RSA-PSK-AES256-GCM-SHA384,RSA-PSK-AES256-CBC-SHA384,RSA-PSK-AES128-GCM-SHA256,RSA-PSK-AES128-CBC-SHA256,RSA-PSK-AES256-CBC-SHA,RSA-PSK-AES128-CBC-SHA",
+                      "versions": [
+                        "dtlsv1.2",
+                        "dtlsv1"
+                      ],
+                      "fail_if_no_peer_cert": false,
+                      "certfile": "${EMQX_ETC_DIR}/certs/cert.pem",
+                      "keyfile": "${EMQX_ETC_DIR}/certs/key.pem",
+                      "cacertfile": "${EMQX_ETC_DIR}/certs/cacert.pem",
+                      "user_lookup_fun": "emqx_tls_psk:lookup"
+                    },
+                    "max_connections": 1024000,
+                    "acceptors": 16,
+                    "max_conn_rate": 1000
+                  },
+                  "summary": "A DTLS listener with PSK example"
+                },
+                "lisetner_with_authn": {
+                  "value": {
+                    "name": "tcp-with-authn",
+                    "type": "tcp",
+                    "bind": "22215",
+                    "authentication": {
+                      "mechanism": "password_based",
+                      "backend": "built_in_database",
+                      "password_hash_algorithm": {
+                        "name": "sha256"
+                      },
+                      "user_id_type": "username"
+                    },
+                    "max_connections": 1024000,
+                    "acceptors": 16,
+                    "max_conn_rate": 1000
+                  },
+                  "summary": "A TCP listener with authentication example"
                 },
                 "ws_listener": {
                   "value": {
@@ -24163,9 +24206,9 @@
                       "check_origin_enable": false,
                       "piggyback": "single"
                     },
+                    "max_connections": 1024000,
                     "acceptors": 16,
-                    "max_conn_rate": 1000,
-                    "max_connections": 1024000
+                    "max_conn_rate": 1000
                   },
                   "summary": "A simple WebSocket listener example"
                 },
@@ -24209,54 +24252,11 @@
                       "check_origin_enable": false,
                       "piggyback": "single"
                     },
+                    "max_connections": 1024000,
                     "acceptors": 16,
-                    "max_conn_rate": 1000,
-                    "max_connections": 1024000
+                    "max_conn_rate": 1000
                   },
                   "summary": "A simple WebSocket/TLS listener example"
-                },
-                "dtls_listener_with_psk_ciphers": {
-                  "value": {
-                    "name": "dtls-psk",
-                    "type": "dtls",
-                    "bind": "22214",
-                    "acceptors": 16,
-                    "dtls_options": {
-                      "verify": "verify_none",
-                      "ciphers": "RSA-PSK-AES256-GCM-SHA384,RSA-PSK-AES256-CBC-SHA384,RSA-PSK-AES128-GCM-SHA256,RSA-PSK-AES128-CBC-SHA256,RSA-PSK-AES256-CBC-SHA,RSA-PSK-AES128-CBC-SHA",
-                      "versions": [
-                        "dtlsv1.2",
-                        "dtlsv1"
-                      ],
-                      "fail_if_no_peer_cert": false,
-                      "certfile": "${EMQX_ETC_DIR}/certs/cert.pem",
-                      "keyfile": "${EMQX_ETC_DIR}/certs/key.pem",
-                      "cacertfile": "${EMQX_ETC_DIR}/certs/cacert.pem",
-                      "user_lookup_fun": "emqx_tls_psk:lookup"
-                    },
-                    "max_conn_rate": 1000,
-                    "max_connections": 1024000
-                  },
-                  "summary": "A DTLS listener with PSK example"
-                },
-                "lisetner_with_authn": {
-                  "value": {
-                    "name": "tcp-with-authn",
-                    "type": "tcp",
-                    "bind": "22215",
-                    "authentication": {
-                      "mechanism": "password_based",
-                      "backend": "built_in_database",
-                      "password_hash_algorithm": {
-                        "name": "sha256"
-                      },
-                      "user_id_type": "username"
-                    },
-                    "acceptors": 16,
-                    "max_conn_rate": 1000,
-                    "max_connections": 1024000
-                  },
-                  "summary": "A TCP listener with authentication example"
                 }
               },
               "schema": {
@@ -26803,82 +26803,82 @@
                   "lwm2m_client": {
                     "value": {
                       "recv_oct": 56,
-                      "inflight_max": "infinity",
+                      "proto_ver": "1.0",
+                      "recv_msg": 0,
+                      "ip_address": "127.0.0.1",
                       "mqueue_max": "infinity",
-                      "proto_name": "LwM2M",
-                      "inflight_cnt": 0,
-                      "expiry_interval": 0,
-                      "send_pkt": 1,
+                      "subscriptions_max": "infinity",
                       "keepalive": 0,
-                      "clientid": "MzAyMzEzNTUwNzk1NDA1MzYyMzIwNzUxNjQwMTY1NzQ0NjE",
-                      "disconnected_at": null,
+                      "clean_start": true,
                       "node": "emqx@127.0.0.1",
                       "send_cnt": 1,
-                      "subscriptions_cnt": 0,
-                      "ip_address": "127.0.0.1",
-                      "recv_msg": 0,
-                      "lifetime": 86400,
+                      "disconnected_at": null,
+                      "awaiting_rel_cnt": 0,
+                      "connected_at": "2021-12-07T10:44:02.721+08:00",
+                      "inflight_max": "infinity",
+                      "send_oct": 61,
+                      "mqueue_len": 0,
+                      "heap_size": 4185,
+                      "awaiting_rel_max": "infinity",
+                      "port": 50675,
+                      "recv_pkt": 1,
                       "mailbox_len": 0,
                       "endpoint_name": "urn:imei:154928475237123",
-                      "send_oct": 61,
-                      "proto_ver": "1.0",
-                      "heap_size": 4185,
-                      "send_msg": 0,
-                      "clean_start": true,
-                      "recv_pkt": 1,
-                      "port": 50675,
-                      "mqueue_len": 0,
-                      "connected_at": "2021-12-07T10:44:02.721+08:00",
-                      "is_bridge": false,
+                      "lifetime": 86400,
                       "created_at": "2021-12-07T10:44:02.721+08:00",
-                      "username": "guest",
-                      "awaiting_rel_cnt": 0,
-                      "subscriptions_max": "infinity",
-                      "mqueue_dropped": 0,
+                      "expiry_interval": 0,
+                      "clientid": "MzAyMzEzNTUwNzk1NDA1MzYyMzIwNzUxNjQwMTY1NzQ0NjE",
+                      "proto_name": "LwM2M",
+                      "send_pkt": 1,
+                      "inflight_cnt": 0,
+                      "subscriptions_cnt": 0,
                       "connected": true,
                       "reductions": 72022,
-                      "awaiting_rel_max": "infinity",
-                      "recv_cnt": 1
+                      "send_msg": 0,
+                      "is_bridge": false,
+                      "recv_cnt": 1,
+                      "username": "guest",
+                      "mqueue_dropped": 0
                     },
                     "summary": "LwM2M client info"
                   },
                   "general_client": {
                     "value": {
                       "recv_oct": 56,
-                      "inflight_max": "infinity",
+                      "proto_ver": "1.0",
+                      "recv_msg": 0,
+                      "ip_address": "127.0.0.1",
                       "mqueue_max": "infinity",
-                      "proto_name": "STOMP",
-                      "inflight_cnt": 0,
-                      "expiry_interval": 0,
-                      "send_pkt": 1,
+                      "subscriptions_max": "infinity",
                       "keepalive": 0,
-                      "clientid": "MzAyMzEzNTUwNzk1NDA1MzYyMzIwNzUxNjQwMTY1NzQ0NjE",
-                      "disconnected_at": null,
+                      "clean_start": true,
                       "node": "emqx@127.0.0.1",
                       "send_cnt": 1,
-                      "subscriptions_cnt": 0,
-                      "ip_address": "127.0.0.1",
-                      "recv_msg": 0,
-                      "mailbox_len": 0,
-                      "send_oct": 61,
-                      "proto_ver": "1.0",
-                      "heap_size": 4185,
-                      "send_msg": 0,
-                      "clean_start": true,
-                      "recv_pkt": 1,
-                      "port": 50675,
-                      "mqueue_len": 0,
-                      "connected_at": "2021-12-07T10:44:02.721+08:00",
-                      "is_bridge": false,
-                      "created_at": "2021-12-07T10:44:02.721+08:00",
-                      "username": "guest",
+                      "disconnected_at": null,
                       "awaiting_rel_cnt": 0,
-                      "subscriptions_max": "infinity",
-                      "mqueue_dropped": 0,
+                      "connected_at": "2021-12-07T10:44:02.721+08:00",
+                      "inflight_max": "infinity",
+                      "send_oct": 61,
+                      "mqueue_len": 0,
+                      "heap_size": 4185,
+                      "awaiting_rel_max": "infinity",
+                      "port": 50675,
+                      "recv_pkt": 1,
+                      "mailbox_len": 0,
+                      "created_at": "2021-12-07T10:44:02.721+08:00",
+                      "expiry_interval": 0,
+                      "clientid": "MzAyMzEzNTUwNzk1NDA1MzYyMzIwNzUxNjQwMTY1NzQ0NjE",
+                      "proto_name": "STOMP",
+                      "send_pkt": 1,
+                      "inflight_cnt": 0,
+                      "subscriptions_cnt": 0,
                       "connected": true,
                       "reductions": 72022,
-                      "awaiting_rel_max": "infinity",
-                      "recv_cnt": 1
+                      "send_msg": 0,
+                      "is_bridge": false,
+                      "recv_cnt": 1,
+                      "username": "guest",
+                      "mqueue_dropped": 0
                     },
                     "summary": "General client info"
                   }
@@ -28394,7 +28394,6 @@
                         "backlog": 1024,
                         "active_n": 100
                       },
-                      "acceptors": 16,
                       "dtls_options": {
                         "verify": "verify_none",
                         "versions": [
@@ -28406,11 +28405,12 @@
                         "keyfile": "${EMQX_ETC_DIR}/certs/key.pem",
                         "cacertfile": "${EMQX_ETC_DIR}/certs/cacert.pem"
                       },
+                      "max_connections": 1024000,
                       "access_rules": [
                         "allow all"
                       ],
-                      "max_conn_rate": 1000,
-                      "max_connections": 1024000
+                      "acceptors": 16,
+                      "max_conn_rate": 1000
                     },
                     "summary": "A simple DTLS listener example"
                   },
@@ -28436,12 +28436,12 @@
                         "keyfile": "${EMQX_ETC_DIR}/certs/key.pem",
                         "cacertfile": "${EMQX_ETC_DIR}/certs/cacert.pem"
                       },
-                      "acceptors": 16,
+                      "max_connections": 1024000,
                       "access_rules": [
                         "allow all"
                       ],
-                      "max_conn_rate": 1000,
-                      "max_connections": 1024000
+                      "acceptors": 16,
+                      "max_conn_rate": 1000
                     },
                     "summary": "A simple SSL listener example"
                   },
@@ -28463,11 +28463,54 @@
                         "backlog": 1024,
                         "active_n": 100
                       },
+                      "max_connections": 1024000,
                       "acceptors": 16,
-                      "max_conn_rate": 1000,
-                      "max_connections": 1024000
+                      "max_conn_rate": 1000
                     },
                     "summary": "A simple TCP listener example"
+                  },
+                  "dtls_listener_with_psk_ciphers": {
+                    "value": {
+                      "name": "dtls-psk",
+                      "type": "dtls",
+                      "bind": "22214",
+                      "dtls_options": {
+                        "verify": "verify_none",
+                        "ciphers": "RSA-PSK-AES256-GCM-SHA384,RSA-PSK-AES256-CBC-SHA384,RSA-PSK-AES128-GCM-SHA256,RSA-PSK-AES128-CBC-SHA256,RSA-PSK-AES256-CBC-SHA,RSA-PSK-AES128-CBC-SHA",
+                        "versions": [
+                          "dtlsv1.2",
+                          "dtlsv1"
+                        ],
+                        "fail_if_no_peer_cert": false,
+                        "certfile": "${EMQX_ETC_DIR}/certs/cert.pem",
+                        "keyfile": "${EMQX_ETC_DIR}/certs/key.pem",
+                        "cacertfile": "${EMQX_ETC_DIR}/certs/cacert.pem",
+                        "user_lookup_fun": "emqx_tls_psk:lookup"
+                      },
+                      "max_connections": 1024000,
+                      "acceptors": 16,
+                      "max_conn_rate": 1000
+                    },
+                    "summary": "A DTLS listener with PSK example"
+                  },
+                  "lisetner_with_authn": {
+                    "value": {
+                      "name": "tcp-with-authn",
+                      "type": "tcp",
+                      "bind": "22215",
+                      "authentication": {
+                        "mechanism": "password_based",
+                        "backend": "built_in_database",
+                        "password_hash_algorithm": {
+                          "name": "sha256"
+                        },
+                        "user_id_type": "username"
+                      },
+                      "max_connections": 1024000,
+                      "acceptors": 16,
+                      "max_conn_rate": 1000
+                    },
+                    "summary": "A TCP listener with authentication example"
                   },
                   "ws_listener": {
                     "value": {
@@ -28496,9 +28539,9 @@
                         "check_origin_enable": false,
                         "piggyback": "single"
                       },
+                      "max_connections": 1024000,
                       "acceptors": 16,
-                      "max_conn_rate": 1000,
-                      "max_connections": 1024000
+                      "max_conn_rate": 1000
                     },
                     "summary": "A simple WebSocket listener example"
                   },
@@ -28542,54 +28585,11 @@
                         "check_origin_enable": false,
                         "piggyback": "single"
                       },
+                      "max_connections": 1024000,
                       "acceptors": 16,
-                      "max_conn_rate": 1000,
-                      "max_connections": 1024000
+                      "max_conn_rate": 1000
                     },
                     "summary": "A simple WebSocket/TLS listener example"
-                  },
-                  "dtls_listener_with_psk_ciphers": {
-                    "value": {
-                      "name": "dtls-psk",
-                      "type": "dtls",
-                      "bind": "22214",
-                      "acceptors": 16,
-                      "dtls_options": {
-                        "verify": "verify_none",
-                        "ciphers": "RSA-PSK-AES256-GCM-SHA384,RSA-PSK-AES256-CBC-SHA384,RSA-PSK-AES128-GCM-SHA256,RSA-PSK-AES128-CBC-SHA256,RSA-PSK-AES256-CBC-SHA,RSA-PSK-AES128-CBC-SHA",
-                        "versions": [
-                          "dtlsv1.2",
-                          "dtlsv1"
-                        ],
-                        "fail_if_no_peer_cert": false,
-                        "certfile": "${EMQX_ETC_DIR}/certs/cert.pem",
-                        "keyfile": "${EMQX_ETC_DIR}/certs/key.pem",
-                        "cacertfile": "${EMQX_ETC_DIR}/certs/cacert.pem",
-                        "user_lookup_fun": "emqx_tls_psk:lookup"
-                      },
-                      "max_conn_rate": 1000,
-                      "max_connections": 1024000
-                    },
-                    "summary": "A DTLS listener with PSK example"
-                  },
-                  "lisetner_with_authn": {
-                    "value": {
-                      "name": "tcp-with-authn",
-                      "type": "tcp",
-                      "bind": "22215",
-                      "authentication": {
-                        "mechanism": "password_based",
-                        "backend": "built_in_database",
-                        "password_hash_algorithm": {
-                          "name": "sha256"
-                        },
-                        "user_id_type": "username"
-                      },
-                      "acceptors": 16,
-                      "max_conn_rate": 1000,
-                      "max_connections": 1024000
-                    },
-                    "summary": "A TCP listener with authentication example"
                   }
                 },
                 "schema": {
@@ -28737,7 +28737,6 @@
                         "backlog": 1024,
                         "active_n": 100
                       },
-                      "acceptors": 16,
                       "dtls_options": {
                         "verify": "verify_none",
                         "versions": [
@@ -28749,11 +28748,12 @@
                         "keyfile": "${EMQX_ETC_DIR}/certs/key.pem",
                         "cacertfile": "${EMQX_ETC_DIR}/certs/cacert.pem"
                       },
+                      "max_connections": 1024000,
                       "access_rules": [
                         "allow all"
                       ],
-                      "max_conn_rate": 1000,
-                      "max_connections": 1024000
+                      "acceptors": 16,
+                      "max_conn_rate": 1000
                     },
                     "summary": "A simple DTLS listener example"
                   },
@@ -28779,12 +28779,12 @@
                         "keyfile": "${EMQX_ETC_DIR}/certs/key.pem",
                         "cacertfile": "${EMQX_ETC_DIR}/certs/cacert.pem"
                       },
-                      "acceptors": 16,
+                      "max_connections": 1024000,
                       "access_rules": [
                         "allow all"
                       ],
-                      "max_conn_rate": 1000,
-                      "max_connections": 1024000
+                      "acceptors": 16,
+                      "max_conn_rate": 1000
                     },
                     "summary": "A simple SSL listener example"
                   },
@@ -28806,11 +28806,54 @@
                         "backlog": 1024,
                         "active_n": 100
                       },
+                      "max_connections": 1024000,
                       "acceptors": 16,
-                      "max_conn_rate": 1000,
-                      "max_connections": 1024000
+                      "max_conn_rate": 1000
                     },
                     "summary": "A simple TCP listener example"
+                  },
+                  "dtls_listener_with_psk_ciphers": {
+                    "value": {
+                      "name": "dtls-psk",
+                      "type": "dtls",
+                      "bind": "22214",
+                      "dtls_options": {
+                        "verify": "verify_none",
+                        "ciphers": "RSA-PSK-AES256-GCM-SHA384,RSA-PSK-AES256-CBC-SHA384,RSA-PSK-AES128-GCM-SHA256,RSA-PSK-AES128-CBC-SHA256,RSA-PSK-AES256-CBC-SHA,RSA-PSK-AES128-CBC-SHA",
+                        "versions": [
+                          "dtlsv1.2",
+                          "dtlsv1"
+                        ],
+                        "fail_if_no_peer_cert": false,
+                        "certfile": "${EMQX_ETC_DIR}/certs/cert.pem",
+                        "keyfile": "${EMQX_ETC_DIR}/certs/key.pem",
+                        "cacertfile": "${EMQX_ETC_DIR}/certs/cacert.pem",
+                        "user_lookup_fun": "emqx_tls_psk:lookup"
+                      },
+                      "max_connections": 1024000,
+                      "acceptors": 16,
+                      "max_conn_rate": 1000
+                    },
+                    "summary": "A DTLS listener with PSK example"
+                  },
+                  "lisetner_with_authn": {
+                    "value": {
+                      "name": "tcp-with-authn",
+                      "type": "tcp",
+                      "bind": "22215",
+                      "authentication": {
+                        "mechanism": "password_based",
+                        "backend": "built_in_database",
+                        "password_hash_algorithm": {
+                          "name": "sha256"
+                        },
+                        "user_id_type": "username"
+                      },
+                      "max_connections": 1024000,
+                      "acceptors": 16,
+                      "max_conn_rate": 1000
+                    },
+                    "summary": "A TCP listener with authentication example"
                   },
                   "ws_listener": {
                     "value": {
@@ -28839,9 +28882,9 @@
                         "check_origin_enable": false,
                         "piggyback": "single"
                       },
+                      "max_connections": 1024000,
                       "acceptors": 16,
-                      "max_conn_rate": 1000,
-                      "max_connections": 1024000
+                      "max_conn_rate": 1000
                     },
                     "summary": "A simple WebSocket listener example"
                   },
@@ -28885,54 +28928,11 @@
                         "check_origin_enable": false,
                         "piggyback": "single"
                       },
+                      "max_connections": 1024000,
                       "acceptors": 16,
-                      "max_conn_rate": 1000,
-                      "max_connections": 1024000
+                      "max_conn_rate": 1000
                     },
                     "summary": "A simple WebSocket/TLS listener example"
-                  },
-                  "dtls_listener_with_psk_ciphers": {
-                    "value": {
-                      "name": "dtls-psk",
-                      "type": "dtls",
-                      "bind": "22214",
-                      "acceptors": 16,
-                      "dtls_options": {
-                        "verify": "verify_none",
-                        "ciphers": "RSA-PSK-AES256-GCM-SHA384,RSA-PSK-AES256-CBC-SHA384,RSA-PSK-AES128-GCM-SHA256,RSA-PSK-AES128-CBC-SHA256,RSA-PSK-AES256-CBC-SHA,RSA-PSK-AES128-CBC-SHA",
-                        "versions": [
-                          "dtlsv1.2",
-                          "dtlsv1"
-                        ],
-                        "fail_if_no_peer_cert": false,
-                        "certfile": "${EMQX_ETC_DIR}/certs/cert.pem",
-                        "keyfile": "${EMQX_ETC_DIR}/certs/key.pem",
-                        "cacertfile": "${EMQX_ETC_DIR}/certs/cacert.pem",
-                        "user_lookup_fun": "emqx_tls_psk:lookup"
-                      },
-                      "max_conn_rate": 1000,
-                      "max_connections": 1024000
-                    },
-                    "summary": "A DTLS listener with PSK example"
-                  },
-                  "lisetner_with_authn": {
-                    "value": {
-                      "name": "tcp-with-authn",
-                      "type": "tcp",
-                      "bind": "22215",
-                      "authentication": {
-                        "mechanism": "password_based",
-                        "backend": "built_in_database",
-                        "password_hash_algorithm": {
-                          "name": "sha256"
-                        },
-                        "user_id_type": "username"
-                      },
-                      "acceptors": 16,
-                      "max_conn_rate": 1000,
-                      "max_connections": 1024000
-                    },
-                    "summary": "A TCP listener with authentication example"
                   }
                 },
                 "schema": {
@@ -29035,7 +29035,6 @@
                       "backlog": 1024,
                       "active_n": 100
                     },
-                    "acceptors": 16,
                     "dtls_options": {
                       "verify": "verify_none",
                       "versions": [
@@ -29047,11 +29046,12 @@
                       "keyfile": "${EMQX_ETC_DIR}/certs/key.pem",
                       "cacertfile": "${EMQX_ETC_DIR}/certs/cacert.pem"
                     },
+                    "max_connections": 1024000,
                     "access_rules": [
                       "allow all"
                     ],
-                    "max_conn_rate": 1000,
-                    "max_connections": 1024000
+                    "acceptors": 16,
+                    "max_conn_rate": 1000
                   },
                   "summary": "A simple DTLS listener example"
                 },
@@ -29077,12 +29077,12 @@
                       "keyfile": "${EMQX_ETC_DIR}/certs/key.pem",
                       "cacertfile": "${EMQX_ETC_DIR}/certs/cacert.pem"
                     },
-                    "acceptors": 16,
+                    "max_connections": 1024000,
                     "access_rules": [
                       "allow all"
                     ],
-                    "max_conn_rate": 1000,
-                    "max_connections": 1024000
+                    "acceptors": 16,
+                    "max_conn_rate": 1000
                   },
                   "summary": "A simple SSL listener example"
                 },
@@ -29104,11 +29104,54 @@
                       "backlog": 1024,
                       "active_n": 100
                     },
+                    "max_connections": 1024000,
                     "acceptors": 16,
-                    "max_conn_rate": 1000,
-                    "max_connections": 1024000
+                    "max_conn_rate": 1000
                   },
                   "summary": "A simple TCP listener example"
+                },
+                "dtls_listener_with_psk_ciphers": {
+                  "value": {
+                    "name": "dtls-psk",
+                    "type": "dtls",
+                    "bind": "22214",
+                    "dtls_options": {
+                      "verify": "verify_none",
+                      "ciphers": "RSA-PSK-AES256-GCM-SHA384,RSA-PSK-AES256-CBC-SHA384,RSA-PSK-AES128-GCM-SHA256,RSA-PSK-AES128-CBC-SHA256,RSA-PSK-AES256-CBC-SHA,RSA-PSK-AES128-CBC-SHA",
+                      "versions": [
+                        "dtlsv1.2",
+                        "dtlsv1"
+                      ],
+                      "fail_if_no_peer_cert": false,
+                      "certfile": "${EMQX_ETC_DIR}/certs/cert.pem",
+                      "keyfile": "${EMQX_ETC_DIR}/certs/key.pem",
+                      "cacertfile": "${EMQX_ETC_DIR}/certs/cacert.pem",
+                      "user_lookup_fun": "emqx_tls_psk:lookup"
+                    },
+                    "max_connections": 1024000,
+                    "acceptors": 16,
+                    "max_conn_rate": 1000
+                  },
+                  "summary": "A DTLS listener with PSK example"
+                },
+                "lisetner_with_authn": {
+                  "value": {
+                    "name": "tcp-with-authn",
+                    "type": "tcp",
+                    "bind": "22215",
+                    "authentication": {
+                      "mechanism": "password_based",
+                      "backend": "built_in_database",
+                      "password_hash_algorithm": {
+                        "name": "sha256"
+                      },
+                      "user_id_type": "username"
+                    },
+                    "max_connections": 1024000,
+                    "acceptors": 16,
+                    "max_conn_rate": 1000
+                  },
+                  "summary": "A TCP listener with authentication example"
                 },
                 "ws_listener": {
                   "value": {
@@ -29137,9 +29180,9 @@
                       "check_origin_enable": false,
                       "piggyback": "single"
                     },
+                    "max_connections": 1024000,
                     "acceptors": 16,
-                    "max_conn_rate": 1000,
-                    "max_connections": 1024000
+                    "max_conn_rate": 1000
                   },
                   "summary": "A simple WebSocket listener example"
                 },
@@ -29183,54 +29226,11 @@
                       "check_origin_enable": false,
                       "piggyback": "single"
                     },
+                    "max_connections": 1024000,
                     "acceptors": 16,
-                    "max_conn_rate": 1000,
-                    "max_connections": 1024000
+                    "max_conn_rate": 1000
                   },
                   "summary": "A simple WebSocket/TLS listener example"
-                },
-                "dtls_listener_with_psk_ciphers": {
-                  "value": {
-                    "name": "dtls-psk",
-                    "type": "dtls",
-                    "bind": "22214",
-                    "acceptors": 16,
-                    "dtls_options": {
-                      "verify": "verify_none",
-                      "ciphers": "RSA-PSK-AES256-GCM-SHA384,RSA-PSK-AES256-CBC-SHA384,RSA-PSK-AES128-GCM-SHA256,RSA-PSK-AES128-CBC-SHA256,RSA-PSK-AES256-CBC-SHA,RSA-PSK-AES128-CBC-SHA",
-                      "versions": [
-                        "dtlsv1.2",
-                        "dtlsv1"
-                      ],
-                      "fail_if_no_peer_cert": false,
-                      "certfile": "${EMQX_ETC_DIR}/certs/cert.pem",
-                      "keyfile": "${EMQX_ETC_DIR}/certs/key.pem",
-                      "cacertfile": "${EMQX_ETC_DIR}/certs/cacert.pem",
-                      "user_lookup_fun": "emqx_tls_psk:lookup"
-                    },
-                    "max_conn_rate": 1000,
-                    "max_connections": 1024000
-                  },
-                  "summary": "A DTLS listener with PSK example"
-                },
-                "lisetner_with_authn": {
-                  "value": {
-                    "name": "tcp-with-authn",
-                    "type": "tcp",
-                    "bind": "22215",
-                    "authentication": {
-                      "mechanism": "password_based",
-                      "backend": "built_in_database",
-                      "password_hash_algorithm": {
-                        "name": "sha256"
-                      },
-                      "user_id_type": "username"
-                    },
-                    "acceptors": 16,
-                    "max_conn_rate": 1000,
-                    "max_connections": 1024000
-                  },
-                  "summary": "A TCP listener with authentication example"
                 }
               },
               "schema": {
@@ -30342,6 +30342,7 @@
                         "current_connections": 0
                       }
                     ],
+                    "max_connections": 1024000,
                     "listeners": [
                       {
                         "id": "lwm2m:udp:default",
@@ -30350,7 +30351,6 @@
                         "type": "udp"
                       }
                     ],
-                    "max_connections": 1024000,
                     "created_at": "2021-12-08T14:41:26.171+08:00",
                     "current_connections": 0
                   },
@@ -30365,6 +30365,7 @@
                         "current_connections": 0
                       }
                     ],
+                    "max_connections": 1024000,
                     "listeners": [
                       {
                         "id": "mqttsn:udp:default",
@@ -30373,7 +30374,6 @@
                         "type": "udp"
                       }
                     ],
-                    "max_connections": 1024000,
                     "created_at": "2021-12-08T14:41:45.071+08:00",
                     "stopped_at": "2021-12-08T14:56:35.576+08:00",
                     "current_connections": 0
@@ -30390,6 +30390,7 @@
                         "current_connections": 0
                       }
                     ],
+                    "max_connections": 1024000,
                     "listeners": [
                       {
                         "id": "stomp:tcp:default",
@@ -30398,7 +30399,6 @@
                         "type": "tcp"
                       }
                     ],
-                    "max_connections": 1024000,
                     "created_at": "2021-12-08T14:42:15.272+08:00",
                     "current_connections": 0
                   }
@@ -30611,17 +30611,17 @@
                     "pool_size": 4,
                     "enable": true,
                     "body": "${payload}",
-                    "method": "post",
                     "url": "http://localhost:9901/messages/${topic}",
+                    "method": "post",
                     "max_retries": 3,
                     "request_timeout": "15s",
                     "pool_type": "random",
                     "resource_opts": {
                       "worker_pool_size": 1,
-                      "query_mode": "async",
-                      "health_check_interval": 15000,
                       "max_buffer_bytes": 104857600,
-                      "inflight_window": 100
+                      "inflight_window": 100,
+                      "query_mode": "async",
+                      "health_check_interval": 15000
                     },
                     "enable_pipelining": 100,
                     "local_topic": "emqx_http/#"
@@ -30645,9 +30645,9 @@
                     "retry_interval": "15s",
                     "max_inflight": 100,
                     "resource_opts": {
+                      "max_buffer_bytes": 104857600,
                       "query_mode": "sync",
-                      "health_check_interval": "15s",
-                      "max_buffer_bytes": 104857600
+                      "health_check_interval": "15s"
                     },
                     "ingress": {
                       "local": {
@@ -30927,8 +30927,8 @@
                       "headers": {
                         "content-type": "application/json"
                       },
-                      "method": "post",
                       "url": "http://127.0.0.1:18083",
+                      "method": "post",
                       "backend": "http",
                       "request_timeout": "5s",
                       "enable_pipelining": 100
@@ -30958,8 +30958,8 @@
                   "password_based:redis": {
                     "value": {
                       "mechanism": "password_based",
-                      "cmd": "HMGET ${username} password_hash salt",
                       "server": "127.0.0.1:6379",
+                      "cmd": "HMGET ${username} password_hash salt",
                       "database": 0,
                       "backend": "redis",
                       "password_hash_algorithm": {
@@ -31192,8 +31192,8 @@
                     "headers": {
                       "content-type": "application/json"
                     },
-                    "method": "post",
                     "url": "http://127.0.0.1:18083",
+                    "method": "post",
                     "backend": "http",
                     "request_timeout": "5s",
                     "enable_pipelining": 100
@@ -31223,8 +31223,8 @@
                 "password_based:redis": {
                   "value": {
                     "mechanism": "password_based",
-                    "cmd": "HMGET ${username} password_hash salt",
                     "server": "127.0.0.1:6379",
+                    "cmd": "HMGET ${username} password_hash salt",
                     "database": 0,
                     "backend": "redis",
                     "password_hash_algorithm": {
@@ -32479,12 +32479,12 @@
                     "backlog": 1024,
                     "active_n": 100
                   },
-                  "acceptors": 16,
-                  "proxy_protocol": false,
+                  "max_connections": 204800,
                   "access_rules": [
                     "allow all"
                   ],
-                  "max_connections": 204800,
+                  "acceptors": 16,
+                  "proxy_protocol": false,
                   "proxy_protocol_timeout": "3s",
                   "zone": "default",
                   "mountpoint": "/",
@@ -32554,12 +32554,12 @@
                   "backlog": 1024,
                   "active_n": 100
                 },
-                "acceptors": 16,
-                "proxy_protocol": false,
+                "max_connections": 204800,
                 "access_rules": [
                   "allow all"
                 ],
-                "max_connections": 204800,
+                "acceptors": 16,
+                "proxy_protocol": false,
                 "proxy_protocol_timeout": "3s",
                 "zone": "default",
                 "mountpoint": "/",
@@ -32969,8 +32969,8 @@
                       "headers": {
                         "content-type": "application/json"
                       },
-                      "method": "post",
                       "url": "http://127.0.0.1:18083",
+                      "method": "post",
                       "backend": "http",
                       "request_timeout": "5s",
                       "enable_pipelining": 100
@@ -33000,8 +33000,8 @@
                   "password_based:redis": {
                     "value": {
                       "mechanism": "password_based",
-                      "cmd": "HMGET ${username} password_hash salt",
                       "server": "127.0.0.1:6379",
+                      "cmd": "HMGET ${username} password_hash salt",
                       "database": 0,
                       "backend": "redis",
                       "password_hash_algorithm": {
@@ -33197,8 +33197,8 @@
                       "headers": {
                         "content-type": "application/json"
                       },
-                      "method": "post",
                       "url": "http://127.0.0.1:18083",
+                      "method": "post",
                       "backend": "http",
                       "request_timeout": "5s",
                       "enable_pipelining": 100
@@ -33228,8 +33228,8 @@
                   "password_based:redis": {
                     "value": {
                       "mechanism": "password_based",
-                      "cmd": "HMGET ${username} password_hash salt",
                       "server": "127.0.0.1:6379",
+                      "cmd": "HMGET ${username} password_hash salt",
                       "database": 0,
                       "backend": "redis",
                       "password_hash_algorithm": {
@@ -33387,8 +33387,8 @@
                     "headers": {
                       "content-type": "application/json"
                     },
-                    "method": "post",
                     "url": "http://127.0.0.1:18083",
+                    "method": "post",
                     "backend": "http",
                     "request_timeout": "5s",
                     "enable_pipelining": 100
@@ -33418,8 +33418,8 @@
                 "password_based:redis": {
                   "value": {
                     "mechanism": "password_based",
-                    "cmd": "HMGET ${username} password_hash salt",
                     "server": "127.0.0.1:6379",
+                    "cmd": "HMGET ${username} password_hash salt",
                     "database": 0,
                     "backend": "redis",
                     "password_hash_algorithm": {
@@ -33649,8 +33649,8 @@
                       "headers": {
                         "content-type": "application/json"
                       },
-                      "method": "post",
                       "url": "http://127.0.0.1:18083",
+                      "method": "post",
                       "backend": "http",
                       "request_timeout": "5s",
                       "enable_pipelining": 100
@@ -33680,8 +33680,8 @@
                   "password_based:redis": {
                     "value": {
                       "mechanism": "password_based",
-                      "cmd": "HMGET ${username} password_hash salt",
                       "server": "127.0.0.1:6379",
+                      "cmd": "HMGET ${username} password_hash salt",
                       "database": 0,
                       "backend": "redis",
                       "password_hash_algorithm": {
@@ -33839,8 +33839,8 @@
                     "headers": {
                       "content-type": "application/json"
                     },
-                    "method": "post",
                     "url": "http://127.0.0.1:18083",
+                    "method": "post",
                     "backend": "http",
                     "request_timeout": "5s",
                     "enable_pipelining": 100
@@ -33870,8 +33870,8 @@
                 "password_based:redis": {
                   "value": {
                     "mechanism": "password_based",
-                    "cmd": "HMGET ${username} password_hash salt",
                     "server": "127.0.0.1:6379",
+                    "cmd": "HMGET ${username} password_hash salt",
                     "database": 0,
                     "backend": "redis",
                     "password_hash_algorithm": {
@@ -35476,17 +35476,17 @@
                       "pool_size": 4,
                       "enable": true,
                       "body": "${payload}",
-                      "method": "post",
                       "url": "http://localhost:9901/messages/${topic}",
+                      "method": "post",
                       "max_retries": 3,
                       "request_timeout": "15s",
                       "pool_type": "random",
                       "resource_opts": {
                         "worker_pool_size": 1,
-                        "query_mode": "async",
-                        "health_check_interval": 15000,
                         "max_buffer_bytes": 104857600,
-                        "inflight_window": 100
+                        "inflight_window": 100,
+                        "query_mode": "async",
+                        "health_check_interval": 15000
                       },
                       "enable_pipelining": 100,
                       "local_topic": "emqx_http/#"
@@ -35510,9 +35510,9 @@
                       "retry_interval": "15s",
                       "max_inflight": 100,
                       "resource_opts": {
+                        "max_buffer_bytes": 104857600,
                         "query_mode": "sync",
-                        "health_check_interval": "15s",
-                        "max_buffer_bytes": 104857600
+                        "health_check_interval": "15s"
                       },
                       "ingress": {
                         "local": {
@@ -35621,17 +35621,17 @@
                       "pool_size": 4,
                       "enable": true,
                       "body": "${payload}",
-                      "method": "post",
                       "url": "http://localhost:9901/messages/${topic}",
+                      "method": "post",
                       "max_retries": 3,
                       "request_timeout": "15s",
                       "pool_type": "random",
                       "resource_opts": {
                         "worker_pool_size": 1,
-                        "query_mode": "async",
-                        "health_check_interval": 15000,
                         "max_buffer_bytes": 104857600,
-                        "inflight_window": 100
+                        "inflight_window": 100,
+                        "query_mode": "async",
+                        "health_check_interval": 15000
                       },
                       "enable_pipelining": 100,
                       "local_topic": "emqx_http/#"
@@ -35655,9 +35655,9 @@
                       "retry_interval": "15s",
                       "max_inflight": 100,
                       "resource_opts": {
+                        "max_buffer_bytes": 104857600,
                         "query_mode": "sync",
-                        "health_check_interval": "15s",
-                        "max_buffer_bytes": 104857600
+                        "health_check_interval": "15s"
                       },
                       "ingress": {
                         "local": {
@@ -35758,17 +35758,17 @@
                     "pool_size": 4,
                     "enable": true,
                     "body": "${payload}",
-                    "method": "post",
                     "url": "http://localhost:9901/messages/${topic}",
+                    "method": "post",
                     "max_retries": 3,
                     "request_timeout": "15s",
                     "pool_type": "random",
                     "resource_opts": {
                       "worker_pool_size": 1,
-                      "query_mode": "async",
-                      "health_check_interval": 15000,
                       "max_buffer_bytes": 104857600,
-                      "inflight_window": 100
+                      "inflight_window": 100,
+                      "query_mode": "async",
+                      "health_check_interval": 15000
                     },
                     "enable_pipelining": 100,
                     "local_topic": "emqx_http/#"
@@ -35790,9 +35790,9 @@
                     "retry_interval": "15s",
                     "max_inflight": 100,
                     "resource_opts": {
+                      "max_buffer_bytes": 104857600,
                       "query_mode": "sync",
-                      "health_check_interval": "15s",
-                      "max_buffer_bytes": 104857600
+                      "health_check_interval": "15s"
                     },
                     "ingress": {
                       "local": {
@@ -37951,8 +37951,8 @@
                     "headers": {
                       "content-type": "application/json"
                     },
-                    "method": "post",
                     "url": "http://127.0.0.1:18083",
+                    "method": "post",
                     "backend": "http",
                     "request_timeout": "5s",
                     "enable_pipelining": 100
@@ -37976,8 +37976,8 @@
                   },
                   {
                     "mechanism": "password_based",
-                    "cmd": "HMGET ${username} password_hash salt",
                     "server": "127.0.0.1:6379",
+                    "cmd": "HMGET ${username} password_hash salt",
                     "database": 0,
                     "backend": "redis",
                     "password_hash_algorithm": {
@@ -38110,8 +38110,8 @@
                       "headers": {
                         "content-type": "application/json"
                       },
-                      "method": "post",
                       "url": "http://127.0.0.1:18083",
+                      "method": "post",
                       "backend": "http",
                       "request_timeout": "5s",
                       "enable_pipelining": 100
@@ -38141,8 +38141,8 @@
                   "password_based:redis": {
                     "value": {
                       "mechanism": "password_based",
-                      "cmd": "HMGET ${username} password_hash salt",
                       "server": "127.0.0.1:6379",
+                      "cmd": "HMGET ${username} password_hash salt",
                       "database": 0,
                       "backend": "redis",
                       "password_hash_algorithm": {
@@ -38301,8 +38301,8 @@
                     "headers": {
                       "content-type": "application/json"
                     },
-                    "method": "post",
                     "url": "http://127.0.0.1:18083",
+                    "method": "post",
                     "backend": "http",
                     "request_timeout": "5s",
                     "enable_pipelining": 100
@@ -38332,8 +38332,8 @@
                 "password_based:redis": {
                   "value": {
                     "mechanism": "password_based",
-                    "cmd": "HMGET ${username} password_hash salt",
                     "server": "127.0.0.1:6379",
+                    "cmd": "HMGET ${username} password_hash salt",
                     "database": 0,
                     "backend": "redis",
                     "password_hash_algorithm": {
@@ -40681,14 +40681,14 @@
                           "name": "default",
                           "type": "udp",
                           "bind": "5683",
-                          "max_conn_rate": 1000,
-                          "max_connections": 1024000
+                          "max_connections": 1024000,
+                          "max_conn_rate": 1000
                         }
                       ],
                       "idle_timeout": "30s",
                       "mountpoint": "coap/",
-                      "connection_required": false,
                       "enable_stats": true,
+                      "connection_required": false,
                       "notify_type": "qos",
                       "publish_qos": "coap",
                       "subscribe_qos": "coap"
@@ -40710,8 +40710,8 @@
                           "name": "default",
                           "type": "tcp",
                           "bind": "7993",
-                          "max_conn_rate": 1000,
-                          "max_connections": 1024000
+                          "max_connections": 1024000,
+                          "max_conn_rate": 1000
                         }
                       ],
                       "idle_timeout": "30s",
@@ -40730,8 +40730,8 @@
                           "name": "default",
                           "type": "tcp",
                           "bind": "7325",
-                          "max_conn_rate": 1000,
-                          "max_connections": 1024000
+                          "max_connections": 1024000,
+                          "max_conn_rate": 1000
                         }
                       ],
                       "mountpoint": "gbt32960/${clientid}",
@@ -40750,8 +40750,8 @@
                           "name": "default",
                           "type": "udp",
                           "bind": "5783",
-                          "max_conn_rate": 1000,
-                          "max_connections": 1024000
+                          "max_connections": 1024000,
+                          "max_conn_rate": 1000
                         }
                       ],
                       "idle_timeout": "30s",
@@ -40803,8 +40803,8 @@
                           "name": "default",
                           "type": "udp",
                           "bind": "1884",
-                          "max_conn_rate": 1000,
-                          "max_connections": 1024000
+                          "max_connections": 1024000,
+                          "max_conn_rate": 1000
                         }
                       ],
                       "idle_timeout": "30s",
@@ -40856,8 +40856,8 @@
                           "name": "default",
                           "type": "tcp",
                           "bind": "61613",
-                          "max_conn_rate": 1000,
-                          "max_connections": 1024000
+                          "max_connections": 1024000,
+                          "max_conn_rate": 1000
                         }
                       ],
                       "idle_timeout": "30s",
@@ -41008,8 +41008,8 @@
                     "heartbeat": "30s",
                     "idle_timeout": "30s",
                     "mountpoint": "coap2/",
-                    "connection_required": false,
                     "enable_stats": true,
+                    "connection_required": false,
                     "notify_type": "qos",
                     "publish_qos": "coap",
                     "subscribe_qos": "coap"
@@ -45411,12 +45411,12 @@
                     "backlog": 1024,
                     "active_n": 100
                   },
-                  "acceptors": 16,
-                  "proxy_protocol": false,
+                  "max_connections": 204800,
                   "access_rules": [
                     "allow all"
                   ],
-                  "max_connections": 204800,
+                  "acceptors": 16,
+                  "proxy_protocol": false,
                   "proxy_protocol_timeout": "3s",
                   "zone": "default",
                   "mountpoint": "/",
@@ -45507,12 +45507,12 @@
                     "backlog": 1024,
                     "active_n": 100
                   },
-                  "acceptors": 16,
-                  "proxy_protocol": false,
+                  "max_connections": 204800,
                   "access_rules": [
                     "allow all"
                   ],
-                  "max_connections": 204800,
+                  "acceptors": 16,
+                  "proxy_protocol": false,
                   "proxy_protocol_timeout": "3s",
                   "zone": "default",
                   "mountpoint": "/",
@@ -45604,12 +45604,12 @@
                   "backlog": 1024,
                   "active_n": 100
                 },
-                "acceptors": 16,
-                "proxy_protocol": false,
+                "max_connections": 204800,
                 "access_rules": [
                   "allow all"
                 ],
-                "max_connections": 204800,
+                "acceptors": 16,
+                "proxy_protocol": false,
                 "proxy_protocol_timeout": "3s",
                 "zone": "default",
                 "mountpoint": "/",
@@ -47689,17 +47689,17 @@
                     "pool_size": 4,
                     "enable": true,
                     "body": "${payload}",
-                    "method": "post",
                     "url": "http://localhost:9901/messages/${topic}",
+                    "method": "post",
                     "max_retries": 3,
                     "request_timeout": "15s",
                     "pool_type": "random",
                     "resource_opts": {
                       "worker_pool_size": 1,
-                      "query_mode": "async",
-                      "health_check_interval": 15000,
                       "max_buffer_bytes": 104857600,
-                      "inflight_window": 100
+                      "inflight_window": 100,
+                      "query_mode": "async",
+                      "health_check_interval": 15000
                     },
                     "enable_pipelining": 100,
                     "local_topic": "emqx_http/#"
@@ -47720,9 +47720,9 @@
                     "retry_interval": "15s",
                     "max_inflight": 100,
                     "resource_opts": {
+                      "max_buffer_bytes": 104857600,
                       "query_mode": "sync",
-                      "health_check_interval": "15s",
-                      "max_buffer_bytes": 104857600
+                      "health_check_interval": "15s"
                     },
                     "ingress": {
                       "local": {
@@ -47799,17 +47799,17 @@
                       "pool_size": 4,
                       "enable": true,
                       "body": "${payload}",
-                      "method": "post",
                       "url": "http://localhost:9901/messages/${topic}",
+                      "method": "post",
                       "max_retries": 3,
                       "request_timeout": "15s",
                       "pool_type": "random",
                       "resource_opts": {
                         "worker_pool_size": 1,
-                        "query_mode": "async",
-                        "health_check_interval": 15000,
                         "max_buffer_bytes": 104857600,
-                        "inflight_window": 100
+                        "inflight_window": 100,
+                        "query_mode": "async",
+                        "health_check_interval": 15000
                       },
                       "enable_pipelining": 100,
                       "local_topic": "emqx_http/#"
@@ -47833,9 +47833,9 @@
                       "retry_interval": "15s",
                       "max_inflight": 100,
                       "resource_opts": {
+                        "max_buffer_bytes": 104857600,
                         "query_mode": "sync",
-                        "health_check_interval": "15s",
-                        "max_buffer_bytes": 104857600
+                        "health_check_interval": "15s"
                       },
                       "ingress": {
                         "local": {
@@ -47916,17 +47916,17 @@
                     "pool_size": 4,
                     "enable": true,
                     "body": "${payload}",
-                    "method": "post",
                     "url": "http://localhost:9901/messages/${topic}",
+                    "method": "post",
                     "max_retries": 3,
                     "request_timeout": "15s",
                     "pool_type": "random",
                     "resource_opts": {
                       "worker_pool_size": 1,
-                      "query_mode": "async",
-                      "health_check_interval": 15000,
                       "max_buffer_bytes": 104857600,
-                      "inflight_window": 100
+                      "inflight_window": 100,
+                      "query_mode": "async",
+                      "health_check_interval": 15000
                     },
                     "enable_pipelining": 100,
                     "local_topic": "emqx_http/#"
@@ -47950,9 +47950,9 @@
                     "retry_interval": "15s",
                     "max_inflight": 100,
                     "resource_opts": {
+                      "max_buffer_bytes": 104857600,
                       "query_mode": "sync",
-                      "health_check_interval": "15s",
-                      "max_buffer_bytes": 104857600
+                      "health_check_interval": "15s"
                     },
                     "ingress": {
                       "local": {
@@ -48152,6 +48152,26 @@
                 }
               }
             }
+          }
+        },
+        "security": [
+          {
+            "basicAuth": []
+          },
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "description": "Clear monitor (statistics) data for the whole cluster.",
+        "tags": [
+          "Metrics"
+        ],
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": "Metrics deleted"
           }
         },
         "security": [

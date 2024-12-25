@@ -26,7 +26,7 @@ The diagram below illustrates a typical architecture of data integration between
 
 Ingesting MQTT data into Microsoft SQL Server works as follows:
 
-1. **Message publication and reception**: Industrial IoT devices establish successful connections to EMQX through the MQTT protocol and publish real-time MQTT data from machines, sensors, and product lines based on their operational states, readings, or triggered events to EMQX. When EMQX receives these messages, it initiates the matching process within its rules engine.  
+1. **Message publication and reception**: Industrial IoT devices establish successful connections to EMQX through the MQTT protocol and publish real-time MQTT data from machines, sensors, and product lines based on their operational states, readings, or triggered events to EMQX. When EMQX receives these messages, it initiates the matching process within its rules engine.
 2. **Message data processing:** When a message arrives, it passes through the rule engine and is then processed by the rule defined in EMQX. The rules, based on predefined criteria, determine which messages need to be routed to Microsoft SQL Server. If any rules specify payload transformations, those transformations are applied, such as converting data formats, filtering out specific information, or enriching the payload with additional context.
 3. **Data ingestion into SQL Server**: The rule triggers the writing of messages to Microsoft SQL Server. With the help of SQL templates, users can extract data from the rule processing results to construct SQL and send it to SQL Server for execution, so that specific fields of the message can be written or updated into the corresponding tables and columns of the database.
 4. **Data Storage and Utilization**: With the data now stored in Microsoft SQL Server, businesses can harness its querying power for various use cases.
@@ -248,13 +248,13 @@ This section demonstrates how to create a rule in the Dashboard for processing m
    FROM
      "t/#"
    ```
-   
+
    ::: tip
 
-   If you are a beginner user, click **SQL Examples** and **Enable Test** to learn and test the SQL rule. 
-   
+   If you are a beginner user, click **SQL Examples** and **Enable Test** to learn and test the SQL rule.
+
    :::
-   
+
 4. Click the + **Add Action** button to define an action that will be triggered by the rule. With this action, EMQX sends the data processed by the rule to Microsoft SQL Server.
 
 5. Select `Microsoft SQL Server` from the **Type of Action** dropdown list. Keep the **Action** dropdown with the default `Create Action` value. You can also select a Microsoft SQL Server Sink if you have created one. This demonstration will create a new Sink.
@@ -270,30 +270,60 @@ This section demonstrates how to create a rule in the Dashboard for processing m
    ```sql
    insert into dbo.t_mqtt_msg(msgid, topic, qos, payload) values ( ${id}, ${topic}, ${qos}, ${payload} )
    ```
-   
+
    If a placeholder variable is undefined in the SQL template, you can toggle the **Undefined Vars as Null** switch above the **SQL template** to define the rule engine behavior:
-   
+
    - **Disabled** (default): The rule engine can insert the string `undefined` into the database.
-   
+
    - **Enabled**: Allow the rule engine to insert `NULL` into the database when a variable is undefined.
-   
+
      ::: tip
-   
+
      If possible, this option should always be enabled; disabling the option is only used to ensure backward compatibility.
-   
+
      :::
-   
+
 9. Advanced settings (optional):  For details, see [Features of Sink](./data-bridges.md#features-of-sink).
 
 10. Before clicking **Create**, you can click **Test Connectivity** to test that the Sink can be connected to the Microsoft SQL Server.
 
 11. Click the **Create** button to complete the Sink configuration. A new Sink will be added to the **Action Outputs.**
 
-12. Back on the **Create Rule** page, verify the configured information. Click the **Create** button to generate the rule. 
+12. Back on the **Create Rule** page, verify the configured information. Click the **Create** button to generate the rule.
 
 You have now successfully created the rule for the Microsoft SQL Server Sink. You can see the newly created rule on the **Integration** -> **Rules** page. Click the **Actions(Sink)** tab and you can see the new Microsoft SQL Server Sink.
 
 You can also click **Integration** -> **Flow Designer** to view the topology and you can see that the messages under topic `t/#` are sent and saved to Microsoft SQL Server after parsing by rule `my_rule`.
+
+Due to ODBC interface limitations, if you need to write Unicode characters, such as CJK characters or Emoji, you need to use a function to convert them into binary format before inserting them.
+
+- When creating a table, set the column type that needs to store Unicode characters to `NVARCHAR`.
+
+  ```sql{5}
+  CREATE TABLE dbo.t_mqtt_msg (id int PRIMARY KEY IDENTITY(1000000001,1) NOT NULL,
+                               msgid   VARCHAR(64) NULL,
+                               topic   VARCHAR(100) NULL,
+                               qos     tinyint NOT NULL DEFAULT 0,
+                               payload NVARCHAR(100) NULL,
+                               arrived DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
+  GO
+  ```
+
+- Use built-in functions to convert strings to UTF-16-little-endian encoded binary strings when creating rules.
+
+  ```sql{2}
+  SELECT
+    sqlserver_bin2hexstr(str_utf16_le(payload)) as payload
+    *
+  FROM
+    "t/#"
+  ```
+
+- Use the `CONVERT` function in the SQL template to convert the corresponding binary data into a string by Microsoft SQL Server.
+
+   ```sql
+   insert into dbo.t_mqtt_msg(msgid, topic, qos, payload) values ( ${id}, ${topic}, ${qos}, CONVERT(NVARCHAR(100), ${payload}) )
+   ```
 
 ## Create a Rule with Microsoft SQL Server for Events Recording
 

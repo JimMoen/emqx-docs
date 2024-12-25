@@ -161,15 +161,20 @@ This section demonstrates how to create a rule in the Dashboard for processing m
 
    * **Exchange**: Enter `test_exchange` created before, which means messages will be published to this exchange.
 
+       ::: tip Note
+
+       Make sure the exchange has been created in RabbitMQ, otherwise the action will be temporarily broken and periodically try to re-create the connection.
+       :::
+
    * **Routing Key**: Enter `test_routing_key` created before, which is the RabbitMQ routing key for publishing messages.
 
        ::: tip
 
-       The **Exchange** and **Routing Key** can be configured as template values, enabling dynamic routing using placeholders to extract values from incoming MQTT message payloads.
+       The exchange and routing key can be configured as template values, enabling dynamic routing using placeholders to extract values from incoming MQTT message payloads.
 
-       For example, to dynamically set the **Routing Key** based on a field in the payload, configure the **Routing Key** as `${payload.akey}`. This extracts the `akey` field from the payload and uses its value as the routing key.
+       For example, to dynamically set the routing Key based on a field in the payload, configure the routing key as `${payload.akey}`. This extracts the `akey` field from the payload and uses its value as the routing key.
 
-       **Note**: In batch mode, the **Exchange** and **Routing Key** template values must remain constant for all messages in the batch. This ensures consistent routing and avoids conflicts during batch processing.
+       **Note**: In batch mode, the exchange and routing key template values must remain constant for all messages in the batch. This ensures consistent routing and avoids conflicts during batch processing.
        :::
 
    * **Virtual Host**: Enter RabbitMQ virtual host;  `/` by default.

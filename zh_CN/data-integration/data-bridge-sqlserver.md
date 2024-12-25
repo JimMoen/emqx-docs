@@ -75,7 +75,7 @@ Microsoft SQL Server 数据集成是 EMQX 的开箱即用功能，结合了 EMQX
    $ /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P mqtt_public1 -N -C
    1>
    ```
-   
+
 
 ::: tip
 
@@ -145,9 +145,9 @@ EMQX 使用 `odbcinst.ini` 配置中的 DSN Name 来确定驱动动态库的路�
 
    ```dockerfile
    FROM emqx/emqx-enterprise:5.8.1
-   
+
    USER root
-   
+
    RUN apt-get -qq update && apt-get install -yqq curl gpg && \
        . /etc/os-release && \
        curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor -o /usr/share/keyrings/microsoft-prod.gpg && \
@@ -157,7 +157,7 @@ EMQX 使用 `odbcinst.ini` 配置中的 DSN Name 来确定驱动动态库的路�
        sed -i 's/ODBC Driver 18 for SQL Server/ms-sql/g' /etc/odbcinst.ini && \
        apt-get clean && \
        rm -rf /var/lib/apt/lists/*
-   
+
    USER emqx
    ```
 
@@ -268,19 +268,19 @@ FileUsage   = 1
    ```sql
    insert into dbo.t_mqtt_msg(msgid, topic, qos, payload) values ( ${id}, ${topic}, ${qos}, ${payload} )
    ```
-   
+
    如果在模板中使用未定义的占位符变量，您可以切换**未定义变量作为 NULL** 开关（位于 **SQL 模板** 上方）来定义规则引擎的行为：
-   
+
    - **关闭**（默认）：规则引擎可以将字符串 `undefined` 插入数据库。
-   
+
    - **启用**：允许规则引擎在变量未定义时将 `NULL` 插入数据库。
-   
+
      ::: tip
-   
+
      如果您初次使用 SQL，可以点击 **SQL 示例** 和**启用调试**来学习和测试规则 SQL 的结果。
-   
+
      :::
-   
+
 10. 高级配置（可选），根据情况配置同步/异步模式，队列与批量等参数，详细请参考 [Sink 的特性](./data-bridges.md#sink-的特性)。
 
 11. 在点击**创建**按钮完成 Sink 创建之前，您可以使用**测试连接**来测试当前 Sink 到 Microsoft SQL Server 的连接是否成功。
@@ -292,6 +292,36 @@ FileUsage   = 1
 现在您已成功创建了通过 Microsoft SQL Server Sink 将数据转发到 Microsoft SQL Server 的规则，同时在**规则**页面的**动作(Sink)** 标签页看到新建的 Microsoft SQL Server Sink。
 
 您还可以点击 **集成** -> **Flow 设计器**可以查看拓扑，通过拓扑可以直观的看到，主题 `t/#` 下的消息在经过规则 `my_rule` 解析后被发送到 Microsoft SQL Server 中。
+
+由于 ODBC 接口限制，需要写入 Unicode 字符，如 CJK 字符或 Emoji 等，需要使用函数转换为二进制格式后插入。
+
+- 在创建表时将需要存储 Unicode 字符的列类型设置为 `NVARCHAR`。
+
+  ```sql{5}
+  CREATE TABLE dbo.t_mqtt_msg (id int PRIMARY KEY IDENTITY(1000000001,1) NOT NULL,
+                               msgid   VARCHAR(64) NULL,
+                               topic   VARCHAR(100) NULL,
+                               qos     tinyint NOT NULL DEFAULT 0,
+                               payload NVARCHAR(100) NULL,
+                               arrived DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP);
+  GO
+  ```
+
+- 在创建规则时使用内置函数将字符串转换为 UTF-16-little-endian 编码的二进制串。
+
+  ```sql{2}
+  SELECT
+    sqlserver_bin2hexstr(str_utf16_le(payload)) as payload
+    *
+  FROM
+    "t/#"
+  ```
+
+- 在 SQL 模板中使用 `CONVERT` 函数，由 Microsoft SQL Server 将对应的二进制数据转为字符串。
+
+  ```sql
+  insert into dbo.t_mqtt_msg(msgid, topic, qos, payload) values ( ${id}, ${topic}, ${qos}, CONVERT(NVARCHAR(100), ${payload}) )
+  ```
 
 ## 创建事件记录 Sink 规则
 

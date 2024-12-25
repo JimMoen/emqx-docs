@@ -9,15 +9,14 @@ $SYS/brokers/emqx@127.0.0.1/version
 $SYS/brokers/emqx@127.0.0.1/uptime
 ```
 
-
-$SYS system message publish interval is configured via Dashboard‘s `Management/MQTT Setting/System Topic`.
+The `$SYS` system message publish interval is configured via Dashboard‘s `Management/MQTT Setting/System Topic`.
 
 ::: tip
-By default, only MQTT clients on localhost are allowed to subscribe to the $SYS topic.
+By default, only MQTT clients on localhost are allowed to subscribe to the `$SYS` topic.
 Please refer to [File Authorization](../access-control/authz/file.md) to modify the ACL rules for publish and subscribe.
 
 
-Most of the data of the $SYS topic in EMQX can be obtained through other methods with lower Couplings.
+Most of the data of the `$SYS` topic in EMQX can be obtained through other methods with lower Couplings.
 The device online and offline status can be captured and processed in the Rule Engine.
 :::
 
