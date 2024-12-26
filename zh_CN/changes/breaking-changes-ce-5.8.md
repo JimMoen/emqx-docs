@@ -1,5 +1,13 @@
 # EMQX 5.8 中的不兼容更改
 
+## v5.8.4
+
+- [#14360](https://github.com/emqx/emqx/pull/14360) 在请求 Prometheus 指标的 JSON 格式时，`client` 顶层键将始终是一个 JSON 对象数组，而不再是单个 JSON 对象。此更改可能会影响您的监控工具处理数据的方式。
+
+## v5.8.3
+
+- [#14305](https://github.com/emqx/emqx/pull/14305) 移除了对 md4、md5 和 ripemd160 在认证中的支持，因为它们不符合 [NIST 安全哈希标准](https://www.nist.gov/publications/secure-hash-standard)。
+
 ## v5.8.1
 
 - [#13792](https://github.com/emqx/emqx/pull/13792) 在新增黑名单记录时，对于未指定 `until`  参数的默认过期时间已从 1 年改为 `无限期`。

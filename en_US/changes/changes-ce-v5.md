@@ -1,5 +1,100 @@
 # EMQX Open Source Version 5
 
+## 5.8.4
+
+*Release Date: 2024-12-26*
+
+Make sure to check the breaking changes and known issues before upgrading to EMQX 5.8.4.
+
+### Enhancements
+
+#### Core MQTT Functionalities
+
+- [#13739](https://github.com/emqx/emqx/pull/13739) Added support for clearing monitor (statistics) data for the whole cluster. You can now send a `DELETE` request to the `api/v5/monitor` endpoint to clear all collected monitoring metrics.
+
+- [#14247](https://github.com/emqx/emqx/pull/14247) Log the client attribute `tns` if it exists in the client metadata.
+
+  If the `client_attrs.tns` attribute is present, it will now be included in the log metadata. However, if the client ID is already prefixed with the `tns` value, it will not be logged again to avoid duplication.
+
+- [#14353](https://github.com/emqx/emqx/pull/14353) Improved robustness of session rebalance and evacuation process. Previously, the session evacuation process could enter a dead loop under certain clustering errors.
+
+#### Rule Engine
+
+- [#14369](https://github.com/emqx/emqx/pull/14369) Introduced two size-related functions in the rule engine: 
+  - `is_empty` : Return `true` if the map or array is empty.
+  - `map_size` : Return the size of a map.
+
+#### Configuration Files
+
+- [#14269](https://github.com/emqx/emqx/pull/14269) Added `etc/base.hocon` config file. In this release, we introduced a new configuration file, `etc/base.hocon`, to enhance configuration management and clarity. 
+
+  Previously, `emqx.conf` was the only place for manually configured settings. However, because it was the top-most layer of the configuration override hierarchy, it caused some confusion. While mutable (not read-only) configurations set in `emqx.conf` could be changed through the UI, API, or CLI and take effect immediately, those changes would not persist after a node restart, leading to inconsistent behavior. 
+
+  To address this, we added `etc/base.hocon` as a foundational configuration layer. The updated configuration precedence order, from top to bottom, is now as follows:
+
+  1. Environment variables
+  2. `etc/emqx.conf`
+  3. `data/configs/cluster.hocon` 
+  4. `etc/base.hocon`
+
+  The `etc/base.hocon` file serves as the base layer for configurations. While configurations in this file can still be modified after the node starts, it ensures consistent behavior and proper configuration overriding.
+
+#### Observability
+
+- [#14360](https://github.com/emqx/emqx/pull/14360) Added listener shutdown counts labeled by shutdown reason to Prometheus metrics, under the `emqx_client_disconnected_reason` counters. Example output:
+
+  ```
+  emqx_client_disconnected_reason{node="emqx@127.0.0.1",reason="takenover"} 1
+  emqx_client_disconnected_reason{node="emqx@127.0.0.1",reason= 1
+  ```
+
+  Currently, this feature is limited to TCP and TLS listeners only.
+
+### Bug Fixes
+
+#### Core MQTT Functionalities
+
+- [#14248](https://github.com/emqx/emqx/pull/14248) Fixed intermittent connectivity issues between cluster nodes that could lead to partial loss of cluster-wide routing table state. This fix ensures better consistency and reliability across the cluster.
+- [#14272](https://github.com/emqx/emqx/pull/14272) Fixed an issue where the `auto_subscribe` configuration loaded via the CLI showed a success message but failed to take effect.
+- [#14424](https://github.com/emqx/emqx/pull/14424) Fixed an issue where membership messages related to exclusive subscriptions were incorrectly logged as `unexpected_info` warnings.
+
+#### REST API
+
+- [#14317](https://github.com/emqx/emqx/pull/14317) Fixed an issue where the HTTP API could return an empty page when calculating pagination.
+
+#### Data Integration
+
+- [#14318](https://github.com/emqx/emqx/pull/14318) Fixed an issue with the initialization of the HTTP connector state. This fix resolves crashes related to the `function_clause` error that could occur when an HTTP action processed incoming traffic while its underlying connector was being restarted. Before this fix, the logs would show cryptic error messages like:
+
+  ```
+  20:42:36.850 [error] msg: "resource_exception", info: #{error => {error, function_clause}, id => <<"action:http:a:connector:http:a">>, name => call_query, ...
+  ```
+
+- [#14319](https://github.com/emqx/emqx/pull/14319) Refactored the internal state machine for resource management, eliminating several race condition bugs. One example is the HTTP action, which, when handling incoming traffic and experiencing health check flapping, could previously result in errors like the following:
+
+  ```
+  2024-11-29T14:58:17.994119+00:00 [error] msg: action_not_found, connector: <<"connector:http:a">>, action_id: <<"action:http:a:connector:http:a">
+  ```
+
+- [#14362](https://github.com/emqx/emqx/pull/14362) Refactored the resource manager state machine to prevent race conditions that could lead to inconsistent states.
+
+- [#14429](https://github.com/emqx/emqx/pull/14429) Fixed the handling of rule action metrics when the underlying connector is disabled. Previously, the failed counter would increment twice for each message—once under the `unknown` category and once under `out_of_service`. With this fix, only the `out_of_service` counter is incremented, providing more accurate metrics.
+
+#### Command Line Interface
+
+- [#14357](https://github.com/emqx/emqx/pull/14357) Fix an issue with `bin/emqx help` command. This fix ensures that the help command now displays the correct usage information. Now, the help command displays the proper details, making it easier for users to understand how to use the command.
+
+#### Configuration File
+
+- [#14371](https://github.com/emqx/emqx/pull/14371) Fixed an issue where client ID override expressions rendered `undefined` or `null` as the literal strings `"undefined"` or `"null"`. Now, these values are correctly displayed as empty strings, providing cleaner and more intuitive outputs when variables are not set or have no value
+- [#14376](https://github.com/emqx/emqx/pull/14376) Enhanced configuration import to handle non-existing log file directories. If the specified log file directory does not exist, the system will now fall back to the default log directory `"${EMQX_LOG_DIR}"`, ensuring smoother operation without errors.
+
+#### Observability
+
+- [#14267](https://github.com/emqx/emqx/pull/14267) Modified the logging behavior to avoid redacting secrets in logs and HTTP responses when the secret string is a file path (e.g., `file:///path/to/the/secret`). 
+
+- Resolve the `function_clause` error that occurs when retrieving the `emqx_license_expiry_at` Prometheus value for a perpetual license.
+
 ## 5.8.3
 
 *Release Date: 2024-12-05*
