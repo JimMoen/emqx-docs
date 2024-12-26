@@ -122,6 +122,10 @@ Make sure to check the breaking changes and known issues before upgrading to EMQ
 
 - Resolve the `function_clause` error that occurs when retrieving the `emqx_license_expiry_at` Prometheus value for a perpetual license.
 
+#### Gateway
+
+- [#14445](https://github.com/emqx/emqx/pull/14445) Fixed the JT/T 808 client issue where the connection process would crash if it received an invalid downstream control message.
+
 ## 5.8.3
 
 *Release Date: 2024-12-05*

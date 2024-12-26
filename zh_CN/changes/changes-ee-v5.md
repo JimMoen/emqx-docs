@@ -122,6 +122,10 @@
 
 - 修复了在获取永久 license `emqx_license_expiry_at`（表示 license 到期时间）相关的 Prometheus 指标值时出现的 `function_clause` 错误。
 
+#### 网关
+
+- [#14445](https://github.com/emqx/emqx/pull/14445) 修复了 JT/T 808 客户端在接收到无效下游控制消息时，连接过程崩溃的问题。
+
 ## 5.8.3
 
 *发布日期：2024-12-05*
