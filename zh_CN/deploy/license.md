@@ -14,6 +14,12 @@ EMQX 企业版随安装包内置了一个试用 License，该 License 最大支�
 - License 支持的并发连接为 10000 线；
 - License 将会实时发送至您的邮箱。
 
+::: tip 注意
+
+试用 License 下的 EMQX Enterprise 不允许用于生产环境。
+
+:::
+
 更多连接以及试用时长的 License 可以向销售人员申请。
 
 :::tip

@@ -21,9 +21,15 @@ If you prefer to try EMQX Enterprise before purchasing, you can apply for a tria
 - The license is valid for 15 days;
 - The license supports 10,000 concurrent connection lines;
 
+::: tip Note
+
+EMQX Enterprise under a trial license is not permitted for use in production environments.
+
+:::
+
 If you want to extend the trial period or request support for a higher number of concurrent users, contact our sales department.
 
-:::tip
+::: tip
 
 As EMQX Enterprise 5.0 uses a different license format, make sure that the version you are applying for is compatible. For EMQX Enterprise customers who want to upgrade to version 5.0, contact your sales representative.
 
