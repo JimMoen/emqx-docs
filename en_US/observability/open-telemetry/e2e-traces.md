@@ -33,18 +33,18 @@ This section guides you on how to enable OpenTelemetry-based end-to-end tracing 
 3. Configure the following settings:
    - **Monitoring platform**: Select `OpenTelemetry`.
    - **Feature Selection**: Select `Traces`.
-   - **Endpoint**: `http://localhost:4317` 
-   - **Enable TLS**: 
-   - **Trace Mode**: Select `End-to-End`.
-   - **Cluster Identifier**:  `emqxcl` by default.
-   - **Traces Export Interval**: `5` seconds by default.
+   - **Endpoint**: Set the trace data export address, which defaults to `http://localhost:4317`. `http://localhost:4317`.
+   - **Enable TLS**: Enable TLS encryption for secure communication as needed, typically for security requirements in production environments.
+   - **Trace Mode**: Select `End-to-End` to enable end-to-end tracing functionality.
+   - **Cluster Identifier**: Add a property value to the span attributes to help identify which EMQX cluster the data comes from. The property key will be `cluster.id`. Typically, set a simple and easily identifiable name or use the cluster name to differentiate between EMQX clusters. The default is `emqxcl`.
+   - **Traces Export Interval**: Set the time interval for exporting trace data, with a default of `5` seconds.
 
 
 4. Click **Trace Advanced Configuration** to configure advanced settings if necessary.
 
-   - **Trace Configuration**:
-   - **Client ID White List**:
-   - **Topic White List**:
+   - **Trace Configuration**: Used to set additional trace options, including whether to trace specific events (such as client connections, message transmissions, etc.).
+   - **Client ID White List**: Set a whitelist to restrict which clients' connections or messages will be traced. This can help avoid unnecessary tracing and reduce additional system resource consumption.
+   - **Topic White List**: Set a topic whitelist, allowing only matching topics to be traced. This works similarly to the client whitelist, helping to control the scope of the tracing.
 
    Click **Confirm** after you save the configuration and close the window.
 
