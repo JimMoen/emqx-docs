@@ -65,7 +65,8 @@ emqx_client_disconnected_reason{node="emqx@127.0.0.1",reason="takenover"} 1 emqx
 
 #### 数据集成
 
-- [#14318](https://github.com/emqx/emqx/pull/14318) 修复了 HTTP 连接器状态初始化的问题。此修复解决了由于 `function_clause` 错误引起的崩溃问题，该错误可能发生在 HTTP 作处理传入流量时，而其底层连接器正在重启。修复前，日志中可能会显示类似以下的错误信息：
+- [#14318](https://github.com/emqx/emqx/pull/14318) 修复了 HTTP 连接器状态初始化的问题。该错误可能发生在 HTTP 动作正在处理流入的消息，而其底层连接器正在重启的过程中。修复前，日志中可能会显示类似以下的错误信息：
+
 
   ```
   20:42:36.850 [error] msg: "resource_exception", info: #{error => {error, function_clause}, id => <<"action:http:a:connector:http:a">>, name => call_query, ...

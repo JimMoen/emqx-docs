@@ -52,7 +52,8 @@ Make sure to check the breaking changes and known issues before upgrading to EMQ
 - [#14360](https://github.com/emqx/emqx/pull/14360) Added listener shutdown counts labeled by shutdown reason to Prometheus metrics, under the `emqx_client_disconnected_reason` counters. Example output:
 
   ```
-  emqx_client_disconnected_reason{node="emqx@127.0.0.1",reason="takenover"} 1 emqx_client_disconnected_reason{node="emqx@127.0.0.1",reason="kicked"} 1
+  emqx_client_disconnected_reason{node="emqx@127.0.0.1",reason="takenover"} 1 
+  emqx_client_disconnected_reason{node="emqx@127.0.0.1",reason="kicked"} 1
   ```
 
   Currently, this feature is limited to TCP and TLS listeners only.
