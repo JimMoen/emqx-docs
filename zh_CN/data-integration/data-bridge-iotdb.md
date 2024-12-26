@@ -188,9 +188,9 @@ EMQX 支持通过 REST API 或 Thrift 协议与 IotDB 通信。
 }
     ```
 
-11. 展开**高级设置**，根据需要配置高级设置选项（可选），详细请参考[高级设置](#高级设置)。
+11. 展开 **高级设置**，根据需要配置高级设置选项（可选），详细请参考[高级设置](#高级设置)。
 
-12. 在点击**创建**之前，您可以点击**测试连接**，以测试 Sink 是否能够连接到 Apache IoTDB 服务器。
+12. 在点击 **创建** 之前，您可以点击 **测试连接**，以测试 Sink 是否能够连接到 Apache IoTDB 服务器。
 
 13. 点击 **创建** 完成 Sink 的创建。回到 **创建规则** 页面，您将看到新的 Sink 出现在 **动作输出** 标签下。
 
@@ -215,7 +215,7 @@ EMQX 支持通过 REST API 或 Thrift 协议与 IotDB 通信。
    | now       | temp        | float     | ${payload.temp}   | 字段、值、数据类型是必填选项，数据类型可选的值为 boolean、 int32、 int64、 float、 double、 text |
    | now       | hum         | float     | ${payload.hum}    |                                                              |
    | now       | status      | boolean   | ${payload.status} |                                                              |
-   | now       | clientid    | Text      | ${clientid}       |                                                              |
+   | now       | clientid    | text      | ${clientid}       |                                                              |
 
    - **Timestamp**: 支持使用 ${var} 格式的占位符，要求是时间戳格式。也可以使用以下特殊字符插入系统时间：
      - now: 当前毫秒级时间戳
