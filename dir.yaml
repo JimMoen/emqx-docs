@@ -524,8 +524,13 @@
           path: dashboard/bridgeoverview
           children:
             - dashboard/rules
-        - dashboard/configuration
-        - dashboard/extensions
+        - title_en: Management
+          title_cn: 管理
+          path: dashboard/configuration
+          children:
+            - dashboard/cluster_settings
+            - dashboard/advanced_mqtt
+            - dashboard/extensions
         - dashboard/diagnose
         - dashboard/system
     - title_en: Single Sign-On (SSO)

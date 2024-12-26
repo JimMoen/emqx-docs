@@ -42,6 +42,8 @@ The number of messages is the statistics of the number of data transferred betwe
 
 In the lower part of the overview page, you can see a visual chart of the number of messages, and view the historical and current number of messages by time change (the time format: YYYY/MM/DD HH:mm), which allows users to better monitor dynamically the real-time changes of all messages within the current EMQX cluster. Hovering over the chart and clicking the icon in the top right corner allows you to enlarge the chart.
 
+Clicking the "Reset Monitoring Data" button on the right side of the page will clear the chart data on the cluster overview page and start displaying new monitoring data from the current time.
+
 ![image](./assets/messages_chart.png)
 
 ::: tip

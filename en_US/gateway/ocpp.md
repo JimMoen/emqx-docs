@@ -143,7 +143,7 @@ In addition to the default settings, EMQX provides a variety of configuration op
 
 ### Basic Configuration
 
-In the **Basic Configuration** tab, you can configure the following fields:
+On the Gateways page, clicking the **Settings** button in the **Actions** column of OCPP gateway. In the **Basic Configuration** tab, you can configure the following fields:
 
 ![ocpp-basic-conf](./assets/ocpp-basic-conf.png)
 
@@ -205,7 +205,7 @@ Click **Add Listener** to open **Add Listener** page, where you can continue wit
 - **Send Timeout**: Set the maximum amount of time in seconds that the gateway will wait for the proxy protocol package before closing the connection due to inactivity, default: `15s`.
 - **Send Timeout Close**: Set whether to close the connection if the send timeout.
 
-**SSL Settings **(for wss listeners only)
+**SSL Settings** (for wss listeners only)
 
 You can set whether to enable the TLS Verify by setting the toggle switch. But before that, you need to configure the related **TLS Cert**, **TLS Key**, and **CA Cert** information, either by entering the content of the file or uploading with the **Select File** button. For details, see [Enable SSL/TLS Connection](../network/emqx-mqtt-tls.md).
 

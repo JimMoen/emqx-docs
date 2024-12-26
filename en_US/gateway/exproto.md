@@ -132,7 +132,7 @@ In addition to the default settings, EMQX provides a variety of configuration op
 
 ### Basic Configuration
 
-On the Gateways page, locate **ExProto**. Click **Settings** in the **Actions** column. On the **Settings** pane, you can customize your ConnectionUnaryHandler service address, ConnectionAdapter listening port, and set the MountPoint string for this gateway. 
+On the Gateways page, locate **ExProto**. Click **Settings** in the **Actions** column. On the **Settings** tab, you can customize your ConnectionUnaryHandler service address, ConnectionAdapter listening port, and set the MountPoint string for this gateway. 
 
 <img src="./assets/exproto-basic-config.png" alt="Basic Configuration" style="zoom:50%;" />
 
