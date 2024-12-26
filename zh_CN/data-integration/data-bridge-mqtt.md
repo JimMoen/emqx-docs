@@ -127,6 +127,18 @@ myprefix:foo2bd61c44:1
      "t/#"
    ```
 
+   如果您使用的是 MQTTv5 协议，只要在规则 SQL 中包含 `pub_props` 字段，发布属性将按原样转发到远程 MQTT 服务器。在上述 `SELECT * FROM t/#` 示例中即是如此。
+
+   若要动态添加更多用户属性，您可以将其包含在规则输出的 `pub_props` 字段中。例如，以下规则会从传入的payload 中提取键和值，并添加一个用户属性：
+
+   ```sql
+   SELECT
+     *,
+     map_put(concat('User-Property.', payload.extra_key), payload.extra_value, pub_props) as pub_props
+   FROM
+     't/#'
+   ```
+
 4. 添加动作，从**动作类型**下拉列表中选择 `MQTT 服务`，保持动作下拉框为默认的`创建动作`选项，此处我们创建一个全新的 Sink 并添加到规则中。
 
 5. 在下方的表单中输入 Sink 的名称与描述。
