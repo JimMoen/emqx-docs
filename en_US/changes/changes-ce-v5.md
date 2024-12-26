@@ -46,8 +46,9 @@ Make sure to check the breaking changes and known issues before upgrading to EMQ
   ```
   emqx_client_disconnected_reason{node="emqx@127.0.0.1",reason="takenover"} 1
   emqx_client_disconnected_reason{node="emqx@127.0.0.1",reason= 1
+  ```
 
-​       Currently, this feature is limited to TCP and TLS listeners only.
+  Currently, this feature is limited to TCP and TLS listeners only.
 
 ### Bug Fixes
 
