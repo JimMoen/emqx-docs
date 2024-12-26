@@ -2,12 +2,12 @@
 
 The rule engine proffers a variety of built-in functions. You can utilize these functions within SQL to accomplish basic data processing, including:
 
-- [Mathematical](#mathematical-functions),
+- [Mathematical](#mathematical-functions)
 - [Data Type Judgment](#data-type-judgment-functions)
-- [Data Type Conversion](#data-type-conversion-functions),
-- [String Operations](#string-operation-functions),
-- [Map Operations](#map-operation-functions),
-- [Array Operations](#array-operation-functions),
+- [Data Type Conversion](#data-type-conversion-functions)
+- [String Operations](#string-operation-functions)
+- [Map Operations](#map-operation-functions)
+- [Array Operations](#array-operation-functions)
 - [Hashing](#hashing-functions)
 - [Compression and Decompression](#compression-and-decompression-functions)
 - [Bit Operations](#bit-operation-functions)
@@ -337,6 +337,18 @@ Determine whether `Term` is of string type. Example:
 ```bash
 is_str('123') = true
 is_str(123) = false
+```
+
+### is_empty(Array or Map) -> boolean
+
+Determine whether an `Array` or a `Map` is empty. Example:
+
+```bash
+is_empty(json_decode('{}')) = true
+is_empty('{}') = true
+is_empty('{"key" : 1}') = false
+is_empty(map_get('key', '{"key" : []}')) = true
+is_empty(map_get('key', '{"key" : [1}')) = false
 ```
 
 ## Data Type Conversion Functions
@@ -988,6 +1000,15 @@ Insert the `Key` and associated `Value` into the `Map` and return the updated ma
 ```bash
 mget(['a', 'b'], mput(['a', 'b'], 2, json_decode('{"a": {"b": 1}}'))) = 2
 mget(['a', 'b'], mput(['a', 'b'], 2, json_decode('{"c": 1}'))) = 2
+```
+
+### map_size(Map: map) -> any
+
+Returns the size of the keys in a `Map`. Example:
+
+```bash
+map_size(json_decode('{}')) = 0
+map_size(json_decode('{"msg": "hello"}')) = 1
 ```
 
 ## Array Operation Functions
