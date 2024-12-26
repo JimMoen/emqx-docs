@@ -2,7 +2,7 @@
 
 ## 5.8.4
 
-*Release Date: 2024-12-25*
+*Release Date: 2024-12-26*
 
 Make sure to check the breaking changes and known issues before upgrading to EMQX 5.8.4.
 
