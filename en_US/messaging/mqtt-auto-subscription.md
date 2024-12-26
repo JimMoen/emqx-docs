@@ -18,7 +18,7 @@ Before EMQX 5.0, this feature is called **Proxy Subscription**.
 
 3. In the pop-up dialog box, type the test topic `a/1` in the **Topic** text box. Leave other settings as default.
 
-   - **Topic**: Type the topic that is automatically subscribed to for the client.
+   - **Topic**: Type the topic that is automatically subscribed to for the client. You can dynamically build the topic using placeholders. For details, see [Placeholders](#placeholders).
 
    - **QoS**: Specify the quality of service of the topic. Options: `0`, `1`, and `2`.
 
