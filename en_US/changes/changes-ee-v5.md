@@ -68,7 +68,7 @@ Make sure to check the breaking changes and known issues before upgrading to EMQ
 
 #### REST API
 
-- [#14317](https://github.com/emqx/emqx/pull/14317) Fixed an issue with paging accumulation in the management APIs by removing an incorrect, but inactive clause. This fix prevents potential issues that could cause empty pages to be returned and safeguards against future misuse of internal APIs.
+- [#14317](https://github.com/emqx/emqx/pull/14317) Fixed an issue where the HTTP API could return an empty page when calculating pagination.
 
 #### Data Integration
 

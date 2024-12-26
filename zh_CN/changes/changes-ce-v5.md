@@ -44,8 +44,8 @@
 - [#14360](https://github.com/emqx/emqx/pull/14360) 在 Prometheus 指标中添加了按关闭原因分类的监听器关闭计数，计数器名为 `emqx_client_disconnected_reason`。示例输出：
 
   ```
-emqx_client_disconnected_reason{node="emqx@127.0.0.1",reason="takenover"} 1 emqx_client_disconnected_reason{node="emqx@127.0.0.1",reason="kicked"} 1
-
+  emqx_client_disconnected_reason{node="emqx@127.0.0.1",reason="takenover"} 1 emqx_client_disconnected_reason{node="emqx@127.0.0.1",reason="kicked"} 1
+  
   ```
 
   目前，该功能仅适用于 TCP 和 TLS 监听器。
@@ -66,7 +66,6 @@ emqx_client_disconnected_reason{node="emqx@127.0.0.1",reason="takenover"} 1 emqx
 #### 数据集成
 
 - [#14318](https://github.com/emqx/emqx/pull/14318) 修复了 HTTP 连接器状态初始化的问题。该错误可能发生在 HTTP 动作正在处理流入的消息，而其底层连接器正在重启的过程中。修复前，日志中可能会显示类似以下的错误信息：
-
 
   ```
   20:42:36.850 [error] msg: "resource_exception", info: #{error => {error, function_clause}, id => <<"action:http:a:connector:http:a">>, name => call_query, ...

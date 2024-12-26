@@ -45,11 +45,9 @@ Make sure to check the breaking changes and known issues before upgrading to EMQ
 
   ```
   emqx_client_disconnected_reason{node="emqx@127.0.0.1",reason="takenover"} 1
-  emqx_client_disconnected_reason{node="emqx@127.0.0.1",reason="kicked"} 1
+  emqx_client_disconnected_reason{node="emqx@127.0.0.1",reason= 1
 
-  ```
-
-  Currently, this feature is limited to TCP and TLS listeners only.
+​       Currently, this feature is limited to TCP and TLS listeners only.
 
 ### Bug Fixes
 
@@ -61,7 +59,7 @@ Make sure to check the breaking changes and known issues before upgrading to EMQ
 
 #### REST API
 
-- [#14317](https://github.com/emqx/emqx/pull/14317) Fixed an issue with paging accumulation in the management APIs by removing an incorrect, but inactive clause. This fix prevents potential issues that could cause empty pages to be returned and safeguards against future misuse of internal APIs.
+- [#14317](https://github.com/emqx/emqx/pull/14317) Fixed an issue where the HTTP API could return an empty page when calculating pagination.
 
 #### Data Integration
 
