@@ -568,7 +568,7 @@
             - title_en: Traces
               title_cn: 追踪
               path: observability/open-telemetry/traces
-            - title_en: E2E Traces
+            - title_en: End-to-end Traces
               title_cn: 端到端追踪
               path: observability/open-telemetry/e2e-traces
     - title_en: Backup and Restore
