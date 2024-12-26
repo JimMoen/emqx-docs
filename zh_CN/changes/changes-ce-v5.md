@@ -60,7 +60,8 @@ emqx_client_disconnected_reason{node="emqx@127.0.0.1",reason="takenover"} 1 emqx
 
 #### REST API
 
-- [#14317](https://github.com/emqx/emqx/pull/14317) 修复了管理 API 中分页累积的问题，通过移除一个不正确但未激活的条件子句。此修复防止了可能导致返回空页面的问题，并避免了未来可能的内部 API 误用。
+- [#14317](https://github.com/emqx/emqx/pull/14317) 修复了 HTTP  API 在计算分页时，有可能返回空页面的问题。
+
 
 #### 数据集成
 
