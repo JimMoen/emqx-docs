@@ -242,5 +242,41 @@ EMQX 节点名由 Name 和 Host 两部分组成，其中 Host 默认来自容器
 EMQX 提供了一个环境变量 `EMQX_HOST`，允许我们自行设置节点名的 Host 部分。当然前提是这个 Host 必须是其他节点可以连接的，所以我们还需要配合网络别名使用：
 
 ```
-docker run -d --name emqx -p 18083:18083 -p 1883:1883 -e EMQX_HOST=alias-for-emqx --network example --network-alias alias-for-emqx --mount type=bind,source=/tmp/emqx,target=/opt/emqx/data emqx:5.0.24
+docker run -d --name emqx -p 18083:18083 -p 1883:1883 -e EMQX_HOST=alias-for-emqx --network example --network-alias alias-for-emqx --mount type=bind,source=/tmp/emqx,target=/opt/emqx/data emqx:5.8.3
 ```
+## 为什么使用 docker-compose 正常启动容器，且打开 Dashboard 管理界面也正常，但是显示 unhealthy 状态？
+
+```bash
+docker-compose ps
+NAME      IMAGE                         COMMAND                  SERVICE   CREATED          STATUS                    PORTS
+emqx1     emqx/emqx:latest   "/usr/bin/docker-ent…"   emqx     120 seconds ago   Up 110 seconds (unhealthy)   0.0.0.0:1883->1883/tcp, :::1883->1883/tcp, 0.0.0.0:18083->18083/tcp, :::18083->18083/tcp
+```
+
+EMQX 的健康检查依赖于 `./bin/emqx_ctl status` 命令，如果这个命令执行失败，则容器会显示为 unhealthy 状态。
+```yaml
+healthcheck:
+      test: ["CMD", "/opt/emqx/bin/emqx_ctl", "status"]
+      interval: 60s
+      timeout: 15s
+      retries: 3
+```
+手动执行 `./bin/emqx_ctl status` 命令:
+```
+emqx@docker:/opt/emqx$ emqx_ctl status
+Node emqx@docker not responding to pings.
+```
+表明命令连不上节点，这是由于启动容器时 network 没有使用 alias，且不是 FQDN 格式，无法找到节点。
+
+解决办法：
+1. 修改 Docker 的 hostname 和 emqx 的节点名一致。
+2. 修改 `docker-compose.yml` 文件，添加 hostname 配置。
+```yaml
+# xxx.yyy.zzz(docker.emqx.com) 符合 FQDN 格式。
+hostname: docker.emqx.com
+ environment:
+      - EMQX_HOST=docker.emqx.com
+```
+
+由于 EMQX 使用 `data/mnesia/<节点名>` 作为数据存储目录，使用 hostname 或者 FQDN 等固定的信息作为节点名（不推荐使用 IP），还可以避免因为节点名称变动导致数据丢失。 
+
+推荐使用 [EMQX Docker Compose 一键生成器](https://docker.emqx.dev/) 一键生成生产就绪的 `docker-compose.yml` 文件。
