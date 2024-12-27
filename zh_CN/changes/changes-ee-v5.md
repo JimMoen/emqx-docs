@@ -31,6 +31,7 @@
   - 正在处理的消息数量
   - 丢弃的消息数量
 - [#14410](https://github.com/emqx/emqx/pull/14410) EMQX 支持与[阿里云表格存储 (Tablestore)](https://cn.aliyun.com/product/ots) 的数据集成。
+- [#14370](https://github.com/emqx/emqx/pull/14370) 重构了 IoTDB 数据集成的实现，现在它有了更好的批量写入的处理能力。
 
 #### 配置文件
 

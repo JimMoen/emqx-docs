@@ -31,6 +31,8 @@ Make sure to check the breaking changes and known issues before upgrading to EMQ
   - In-flight message count
   - Dropped message count
 - [#14410](https://github.com/emqx/emqx/pull/14410) EMQX supports the data integration with [Aliyun Tablestore](https://cn.aliyun.com/product/ots).
+- [#14370](https://github.com/emqx/emqx/pull/14370) Refactored the implementation of IoTDB data integration, now it has better batch performance.
+
 
 #### Configuration Files
 
