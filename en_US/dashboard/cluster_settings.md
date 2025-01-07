@@ -34,6 +34,16 @@ The **Retainer** tab page contains MQTT protocol-related configuration items for
 
 The **System Topic** tab page provides configuration items for EMQX's built-in system topics. EMQX periodically publishes operational status, usage statistics, and real-time client events to system topics prefixed with `$SYS/`. When clients subscribe to these topics, EMQX will publish related information to those topics. Configuration items for system topics include message publish interval, heartbeat interval, etc.
 
+### Force Shutdown
+
+The **Force Shutdown** tab allows you to configure the automatic shutdown behavior based on resource usage thresholds. This feature safeguards the EMQX from potential instability due to excessive resource consumption, such as message queue length or heap size.
+
+You can configure settings for the following fields in the **Force Shutdown** tab page:
+
+- **Enable Force Shutdown**: This toggle switch enables or disables the force shutdown feature. When enabled, the system will automatically trigger a shutdown if the specified resource thresholds are surpassed. It is enabled by default.
+- **Max Heap Size**: Specifies the maximum allowed heap size for the system. If the heap size surpasses this limit, the system will initiate a forced shutdown to maintain stability. The default value is `32 MB`.
+- **Max Message Queue Length**: Defines the maximum allowed length for the message queue. If the queue exceeds this length, a forced shutdown will be triggered to prevent system overload. The default value is `1000`.
+
 ## Listeners
 
 Click on **Management** -> **Listeners** in the left menu to enter the listeners page. This page displays a list of listeners by default. EMQX provides four common listeners:
