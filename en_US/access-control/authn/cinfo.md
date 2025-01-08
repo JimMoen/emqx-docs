@@ -48,7 +48,7 @@ authentication = [
   },
   # ... more authenticators ...
   # ...
-  # If all authenticators are exhausted without an 'allow' or a 'deny' result, the client is not rejected
+  # If all authenticators are exhausted without an 'allow' or a 'deny' result, the client is rejected
 ]
 ```
 
