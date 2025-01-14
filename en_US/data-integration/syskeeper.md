@@ -34,6 +34,7 @@ This section describes the preparations you must complete before creating the Na
 
 - Knowledge about EMQX data integration [rules](./rules.md)
 - Knowledge about [data integration](./data-bridges.md)
+- Understanding of the basic concepts and working principles of Nari SysKeeper devices
 
 ### Start a Nari SysKeeper Proxy in Security Zone III
 
@@ -47,7 +48,7 @@ This section introduces how to start a Nari SysKeeper Proxy in Security Zone III
 
 3. Enter a name for the Connector. The name should combine upper/lower case letters or numbers, for example, `my_sysk_proxy`.
 
-4. Set **Listen Address** to `Address:9002`, for example, `172.17.0.1:9002`. The SysKeeper Proxy will start a TCP listener. Make sure that the port is not occupied by other processes and that the firewall allows access to this port.
+4. Set **Listen Address** to `0.0.0.0:9002`. The SysKeeper Proxy will start a TCP listener. Make sure that the port is not occupied by other processes and that the firewall allows access to this port.
 
 5. Leave the values of other configuration options as default.
 
@@ -66,6 +67,9 @@ This section demonstrates how to configure a Connector for Nari SysKeeper Forwar
 3. Enter a name for the Connector. The name should combine upper/lower case letters or numbers, for example, `my_sysk`.
 
 4. Set the **Server** to the address of the SysKeeper proxy server, for example, `172.17.0.1:9002`.
+
+   - The address `172.17.0.1` is the virtual IP address configured by SysKeeper for Security Zone III.
+   - The port `9002` is the listening port configured by the SysKeeper Proxy of EMQX in Security Zone III.
 
 5. Before clicking **Create**, you can click **Test Connectivity** to test that the Connector can connect to the SysKeeper Proxy.
 
