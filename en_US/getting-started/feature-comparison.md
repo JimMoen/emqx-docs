@@ -31,7 +31,7 @@ This page lists features supported across different deployment types in detail.
   </tr>
   <tr>
     <td><b>MQTT over QUIC</b></td>
-    <td><img src="./assets/cross_mark_64.png" style="zoom:40%;" /></td>
+    <td><img src="./assets/check_mark_64.png" style="zoom:40%;" /></td>
     <td><img src="./assets/check_mark_64.png" style="zoom:40%;" /></td>
     <td><img src="./assets/check_mark_64.png" style="zoom:40%;" /></td>
     <td><img src="./assets/check_mark_64.png" style="zoom:40%;" /></td>
