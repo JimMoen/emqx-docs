@@ -1,22 +1,12 @@
 # Known Issues in EMQX 5.8
 
-## e5.8.2
+## e5.8.5
 
 - **Node Crash if Linux monotonic clock steps backward (since 5.0)**
 
   In certain virtual Linux environments, the operating system is unable to keep the clocks monotonic,
   which may cause Erlang VM to exit with message `OS monotonic time stepped backwards!`.
   For such environments, one may set the `+c` flag to `false` in `etc/vm.args`.
-
-- **Node Cannot Start if a New Node Joined Cluster While It was Stopped (since 5.0)**
-
-  In a cluster of 2 or more nodes, if a new node joins the cluster while some nodes are down, the nodes which were down will fail to restart and will emit logs like below.
-  `2024-10-03T17:13:45.063985+00:00 [error] Mnesia('emqx@172.17.0.5'): ** ERROR ** (core dumped to file: "/opt/emqx/MnesiaCore.emqx@172.17.0.5_1727_975625_63176"), ** FATAL ** Failed to merge schema: {aborted,function_clause}`
-
-  > **Workaround:**
-  > Delete the `data/mnesia` directory and restart the node.
-
-  <!-- https://emqx.atlassian.net/browse/EMQX-12290 -->
 
 - **IoTDB May Not Work Properly in Batch Mode when `batch_size > 1` (since 5.0)**
 
@@ -27,6 +17,18 @@
 - **Limitation in SAML-Based SSO (since 5.3)**
 
   EMQX Dashboard supports Single Sign-On based on the Security Assertion Markup Language (SAML) 2.0 standard and integrates with Okta and OneLogin as identity providers. However, the SAML-based SSO currently does not support a certificate signature verification mechanism and is incompatible with Azure Entra ID due to its complexity.
+
+## e5.8.4
+
+- **Node Cannot Start if a New Node Joined Cluster While It was Stopped (since 5.0)**
+
+  In a cluster of 2 or more nodes, if a new node joins the cluster while some nodes are down, the nodes which were down will fail to restart and will emit logs like below.
+  `2024-10-03T17:13:45.063985+00:00 [error] Mnesia('emqx@172.17.0.5'): ** ERROR ** (core dumped to file: "/opt/emqx/MnesiaCore.emqx@172.17.0.5_1727_975625_63176"), ** FATAL ** Failed to merge schema: {aborted,function_clause}`
+
+  > **Workaround:**
+  > Delete the `data/mnesia` directory and restart the node.
+
+  <!-- https://emqx.atlassian.net/browse/EMQX-12290 -->
 
 ## e5.8.1
 
