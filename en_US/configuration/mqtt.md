@@ -10,7 +10,7 @@ This section will introduce the configuration settings that determine how the MQ
 
 :::tip
 
-You can also find the corresponding configuration items in EMQX Dashboard (**Management** -> **MQTT Settings** -> **General**). Once you configured these items with the Dashboard, your settings will override the same configuration items in `emqx.conf`.
+You can also find the corresponding configuration items in the EMQX Dashboard (**Management** -> **MQTT Settings** -> **General**). Once you have configured these items with the Dashboard, your settings will override the same configuration items in `emqx.conf`.
 
 :::
 
@@ -40,13 +40,13 @@ Where,
 
 ## Subscription Settings
 
-In EMQX, subscription refers to the process of a client subscribing to a topic on EMQX. When a client subscribes to a topic, it is indicating that it wants to receive messages published to that topic.
+In EMQX, subscription refers to the process of a client subscribing to a topic on EMQX. When a client subscribes to a topic, it indicates that it wants to receive messages published to that topic.
 
-This section introduces how to configure shared subscription, wildcard subscription, and exclusive subscription. 
+This section introduces how to configure shared, wildcard, and exclusive subscriptions. 
 
 :::tip
 
-You can also find the corresponding configuration items in EMQX Dashboard (**Configuration** -> **MQTT** -> **General**). Once you configured these items with the Dashboard, your settings will override the same configuration items in `emqx.conf`.
+You can also find the corresponding configuration items in the EMQX Dashboard (**Management** -> **MQTT Settings** -> **General**). Once you have configured these items with the Dashboard, your settings will override the same configuration items in `emqx.conf`.
 
 :::
 
@@ -63,7 +63,7 @@ mqtt {
 
 Where, 
 
-| **Configuration Items**        | Dashboard UI                    | **Description**                                              | **Default value** | Optinal Values                                               |
+| **Configuration Items**        | Dashboard UI                    | **Description**                                              | **Default value** | Optional Values                                              |
 | ------------------------------ | ------------------------------- | ------------------------------------------------------------ | ----------------- | ------------------------------------------------------------ |
 | `wildcard_subscription`        | Wildcard Subscription Available | Wildcard subscriptions allow MQTT clients to subscribe to multiple topics using a single subscription, using wildcards such as `+` and `#`. <br /><br />This sets whether to enable wildcard subscription. | `true`            | `true`, `false`                                              |
 | `exclusive_subscription`       | Exclusive Subscription          | Exclusive subscriptions allow only one MQTT client to subscribe to a topic at a time.<br /><br />This sets whether to enable exclusive subscriptions. | `true`            | `true`, `false`                                              |
@@ -154,21 +154,21 @@ Where,
 | `mqueue_priorities`                   | Topic Priorities            | This sets the topic priorities, the configuration here will override that defined in `mqueue_default_priority`. | `disabled` <br />The session uses the priority set by `mqueue_default_priority`. | `disabled`<br />or<br />`1` - `255` |
 | `mqueue_default_priority`             | Default Topic Priorities    | This sets the default topic priority.                        | `lowest`                                                     | `highest`， `lowest`                |
 | `mqueue_store_qos0`                   | Store QoS 0 Message         | This sets whether to store QoS 0 message in the message queue when the connection is down but the session remains. | `true`                                                       | `true`, `false`                     |
-| `force_shutdown`                      | --                          | This sets whether to enable the force shutdown feature if the queue length (`max_message_queue_le`) or heap size (`max_heap_size`) reaches the specified value. | `true`                                                       | `true`, `false`                     |
-| `force_shutdown.max_message_queue_le` | --                          | This sets the maximum queue length to trigger a forced shutdown. | `1000`                                                       | `1` - `infinity`                    |
-| `force_shutdown.max_heap_size`        | --                          | This sets the maximum heap size to trigger a forced shutdown. | `32MB`                                                       | --                                  |
+| `force_shutdown`                      | Enable Force Shutdown       | This sets whether to enable the force shutdown feature if the queue length (`max_message_queue_le`) or heap size (`max_heap_size`) reaches the specified value. | `true`                                                       | `true`, `false`                     |
+| `force_shutdown.max_message_queue_le` | Max Mailbox Size            | This sets the maximum queue length to trigger a forced shutdown. | `1000`                                                       | `1` - `infinity`                    |
+| `force_shutdown.max_heap_size`        | Max Heap Size               | This sets the maximum heap size to trigger a forced shutdown. | `32MB`                                                       | --                                  |
 | `force_gc`                            | --                          | This sets whether to enable forced garbage collection if the specified message number (`count`) or byte received (`bytes`)  is reached: | `true`                                                       | `true`, `false`                     |
 | `force_gc.count`                      | --                          | This sets the received message number that will trigger the forced garbage collection. | `16000`                                                      | `0` - `infinity`                    |
 | `force_gc.bytes`                      | --                          | This sets the received byte number that will trigger the forced garbage collection. | `16MB`<br />Unit: `MB`                                       | --                                  |
 
 :::tip
 
-To Configure MQTT via Dashboard,  click **Configuration** -> **MQTT** on the left navigation menu of the Dashboard. Once you configured these items with the Dashboard, your settings will override the same configuration items in `emqx.conf`.
+To Configure MQTT settings via Dashboard,  click **Management** -> **MQTT Settings** on the left navigation menu of the Dashboard. Once you have configured these items with the Dashboard, your settings will override the same configuration items in `emqx.conf`.
 
 :::
 
 ::: tip
 
-EMQX offers more configuration items to serve customized needs better. For details, see the [EMQX Open Source Configuration Manual](https://docs.emqx.com/en/emqx/v@CE_VERSION@/hocon/) and [EMQX Enterprise Configuration Manual for Enterprise](https://docs.emqx.com/en/enterprise/v@EE_VERSION@/hocon/).
+EMQX offers more configuration items to better serve customized needs. For details, see the [EMQX Open Source Configuration Manual](https://docs.emqx.com/en/emqx/v@CE_VERSION@/hocon/) and [EMQX Enterprise Configuration Manual for Enterprise](https://docs.emqx.com/en/enterprise/v@EE_VERSION@/hocon/).
 
 :::

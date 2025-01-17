@@ -7,16 +7,16 @@ In EMQX, listener is configured to receive requests from MQTT clients. EMQX supp
 - Websocket listener: `8083`
 - Secure websocket listener: `8084`
 
-:::tip
+::: tip
 
-You can also configure listeners via Dashboard by clicking **Management** -> **Listener** on the left navigation menu of the Dashboard.
-However if the listeners are configured from `emqx.conf`, the changes made from the dashboard will only take effect temporarily until EMQX restart.
+You can also configure listeners via Dashboard by clicking **Management** -> **Listeners** on the left navigation menu of the Dashboard.
+However if the listeners are configured from `emqx.conf`, the changes made from the Dashboard will only take effect temporarily until EMQX restarts.
 
 :::
 
 ::: tip
 
-EMQX offers more configuration items to serve customized needs better. For details, see the [EMQX Open Source Configuration Manual](https://docs.emqx.com/en/emqx/v@CE_VERSION@/hocon/) and [EMQX Enterprise Configuration Manual for Enterprise](https://docs.emqx.com/en/enterprise/v@EE_VERSION@/hocon/).
+EMQX offers more configuration items to better serve customized needs. For details, see the [EMQX Open Source Configuration Manual](https://docs.emqx.com/en/emqx/v@CE_VERSION@/hocon/) and [EMQX Enterprise Configuration Manual for Enterprise](https://docs.emqx.com/en/enterprise/v@EE_VERSION@/hocon/).
 
 :::
 
@@ -138,7 +138,7 @@ where:
 
 <!--To add code sample for adding multiple listeners.-->
 
-## Link Listener to a Configuration zone
+## Link Listener to a Configuration Zone
 
 Each listener in EMQX is associated with a zone, which by default is set to a logical zone named `default`.
 

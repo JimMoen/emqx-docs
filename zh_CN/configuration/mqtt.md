@@ -110,7 +110,7 @@ $$
 
 ::: tip
 
-您也可以在 EMQX Dashboard 中找到对应的配置项（**管理** -> **MQTT 配置** -> **会话**和**会话持久化**）。一旦您通过 Dashboard 配置了这些项，您的设置将覆盖 `emqx.conf` 中的相同配置项。
+您也可以在 EMQX Dashboard 中找到对应的配置项（**管理** -> **MQTT 配置**）。一旦您通过 Dashboard 配置了这些项，您的设置将覆盖 `emqx.conf` 中的相同配置项。
 
 :::
 
@@ -157,9 +157,9 @@ session {
 | `mqueue_priorities`                   | 主题优先级           | 此设置主题优先级，此处的配置将覆盖 `mqueue_default_priority` 定义的优先级。 | `disabled` <br />会话使用 `mqueue_default_priority` 设置的优先级。 | `disabled`<br />或<br />`1` - `255` |
 | `mqueue_default_priority`             | 默认主题优先级       | 此设置默认主题优先级。                                       | `lowest`                                                     | `highest`， `lowest`                |
 | `mqueue_store_qos0`                   | 存储 QoS 0 消息      | 此设置在连接断开但会话保持时是否存储 QoS 0 消息在消息队列中。 | `true`                                                       | `true`, `false`                     |
-| `force_shutdown`                      | --                   | 此设置是否启用强制关闭功能，如果队列长度（`max_message_queue_le`）或堆大小（`max_heap_size`）达到指定值。 | `true`                                                       | `true`, `false`                     |
-| `force_shutdown.max_message_queue_le` | --                   | 此设置触发强制关闭的最大队列长度。                           | `1000`                                                       | `1` - `infinity`                    |
-| `force_shutdown.max_heap_size`        | --                   | 此设置触发强制关闭的最大堆大小。                             | `32 MB`                                                      | --                                  |
+| `force_shutdown`                      | 强制关闭             | 此设置是否启用强制关闭功能，如果队列长度（`max_message_queue_le`）或堆大小（`max_heap_size`）达到指定值。 | `true`                                                       | `true`, `false`                     |
+| `force_shutdown.max_message_queue_le` | 最大邮箱大小         | 此设置触发强制关闭的最大队列长度。                           | `1000`                                                       | `1` - `infinity`                    |
+| `force_shutdown.max_heap_size`        | 最大堆内存           | 此设置触发强制关闭的最大堆大小。                             | `32 MB`                                                      | --                                  |
 | `force_gc`                            | --                   | 此设置是否启用强制垃圾回收，如果达到指定的消息数量（`count`）或接收字节（`bytes`）： | `true`                                                       | `true`, `false`                     |
 | `force_gc.count`                      | --                   | 此设置将触发强制垃圾回收的接收消息数量。                     | `16000`                                                      | `0` - `infinity`                    |
 | `force_gc.bytes`                      | --                   | 此设置将触发强制垃圾回收的接收字节数量。                     | `16 MB`<br />单位: `MB`                                      | --                                  |
